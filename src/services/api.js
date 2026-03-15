@@ -32,27 +32,33 @@ class PhotoAPI {
     }
   }
 
-  // Upload multiple images
+  // Upload multiple images directly to S3 via presigned URLs
   async uploadImages(files, onProgress = null) {
     try {
-      const formData = new FormData();
-      files.forEach((file) => {
-        formData.append("files", file);
-      });
+      // Step 1: get presigned URLs from backend
+      const fileInfos = files.map((f) => ({
+        filename: f.name,
+        content_type: f.type || "image/jpeg",
+      }));
+      const { data } = await this.client.post("/api/presigned-upload", { files: fileInfos });
 
-      const response = await this.client.post("/api/bulk-upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        onUploadProgress: (progressEvent) => {
-          if (onProgress) {
-            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            onProgress(progress);
-          }
-        },
-      });
+      // Step 2: upload each file directly to S3
+      let completed = 0;
+      await Promise.all(
+        data.urls.map(async (urlInfo, i) => {
+          await axios.put(urlInfo.url, files[i], {
+            headers: { "Content-Type": urlInfo.content_type },
+          });
+          completed++;
+          if (onProgress) onProgress(Math.round((completed / data.urls.length) * 100));
+        })
+      );
 
-      return response.data;
+      return {
+        status: "completed",
+        message: `Upload completed: ${data.urls.length}/${files.length} files successful`,
+        summary: { total_files: files.length, successful: data.urls.length, failed: files.length - data.urls.length },
+      };
     } catch (error) {
       console.error("Upload failed:", error);
       throw error;
