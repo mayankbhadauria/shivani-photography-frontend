@@ -123,6 +123,25 @@ const GalleryWrapper = styled.div`
   }
 `;
 
+const DeleteButton = styled.button`
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 10;
+  background: rgba(220, 53, 69, 0.85);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(185, 28, 45, 0.95);
+  }
+`;
+
 const ErrorMessage = styled.div`
   background: #f8d7da;
   color: #721c24;
@@ -138,6 +157,7 @@ const Gallery = () => {
   const [error, setError] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [apiHealth, setApiHealth] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     checkApiHealth();
@@ -209,6 +229,18 @@ const Gallery = () => {
     }
   };
 
+  const handleDelete = async () => {
+    const image = images[currentIndex];
+    if (!window.confirm(`Delete this photo?`)) return;
+    try {
+      await photoAPI.deleteImage(image.imageKey);
+      setImages((prev) => prev.filter((_, i) => i !== currentIndex));
+      setCurrentIndex((prev) => Math.max(0, prev - 1));
+    } catch (err) {
+      setError("Failed to delete image. Please try again.");
+    }
+  };
+
   if (loading) {
     return (
       <GalleryContainer>
@@ -244,7 +276,8 @@ const Gallery = () => {
           <p>Upload your first photos to start building your beautiful portfolio!</p>
         </EmptyGallery>
       ) : (
-        <GalleryWrapper>
+        <GalleryWrapper style={{ position: "relative" }}>
+          <DeleteButton onClick={handleDelete}>🗑 Delete</DeleteButton>
           <ImageGallery
             items={images}
             showPlayButton={false}
@@ -258,6 +291,7 @@ const Gallery = () => {
             infinite={true}
             lazyLoad={true}
             additionalClass="custom-image-gallery"
+            onSlide={(index) => setCurrentIndex(index)}
           />
         </GalleryWrapper>
       )}

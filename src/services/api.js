@@ -65,10 +65,9 @@ class PhotoAPI {
     }
   }
 
-  // Delete image (future enhancement)
   async deleteImage(imageKey) {
     try {
-      const response = await this.client.delete(`/api/images/${encodeURIComponent(imageKey)}`);
+      const response = await this.client.delete(`/api/images/${imageKey}`);
       return response.data;
     } catch (error) {
       console.error("Delete failed:", error);
