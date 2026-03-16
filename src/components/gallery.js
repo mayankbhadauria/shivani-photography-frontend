@@ -162,18 +162,17 @@ const ThumbNormal = styled.div`
   img { width: 100%; height: 70px; object-fit: cover; }
 `;
 
-// Thumbnail in selection mode — image + overlay checkbox
+// Thumbnail in selection mode — overlay toggled via direct DOM, no styled-component prop
 const ThumbSelect = styled.div`
   position: relative;
   cursor: pointer;
 
   img { width: 100%; height: 70px; object-fit: cover; display: block; }
 
-  .overlay {
+  .thumb-overlay {
     position: absolute;
     inset: 0;
-    background: ${({ selected }) => selected ? "rgba(40, 167, 69, 0.4)" : "transparent"};
-    transition: background 0.15s;
+    background: transparent;
   }
 `;
 
@@ -198,9 +197,9 @@ const Gallery = ({ onSignOut }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedKeys, setSelectedKeys] = useState(new Set());
   const [selectedCount, setSelectedCount] = useState(0);
   const selectedKeysRef = useRef(new Set());
+  const countTimerRef = useRef(null);
   const [downloading, setDownloading] = useState(false);
   const [bulkDownloading, setBulkDownloading] = useState(false);
 
@@ -235,7 +234,8 @@ const Gallery = ({ onSignOut }) => {
         imageKey: img.key,
         size: img.size,
       })));
-      setSelectedKeys(new Set());
+      selectedKeysRef.current = new Set();
+      setSelectedCount(0);
     } catch {
       setError("Failed to load images. Please try again.");
     } finally {
@@ -269,7 +269,8 @@ const Gallery = ({ onSignOut }) => {
       await photoAPI.deleteImage(image.imageKey);
       setImages((prev) => prev.filter((_, i) => i !== currentIndex));
       setCurrentIndex((prev) => Math.max(0, prev - 1));
-      setSelectedKeys((prev) => { const n = new Set(prev); n.delete(image.imageKey); return n; });
+      selectedKeysRef.current.delete(image.imageKey);
+      setSelectedCount(selectedKeysRef.current.size);
     } catch {
       setError("Failed to delete image. Please try again.");
     }
@@ -317,7 +318,6 @@ const Gallery = ({ onSignOut }) => {
       a.click();
       URL.revokeObjectURL(url);
       selectedKeysRef.current = new Set();
-      setSelectedKeys(new Set());
       setSelectedCount(0);
       setSelectionMode(false);
     } catch {
@@ -327,7 +327,7 @@ const Gallery = ({ onSignOut }) => {
     }
   };
 
-  // Instant DOM update for highlight — no React re-render of thumbnails
+  // Instant DOM update — zero React involvement on each tap
   const toggleSelect = useCallback((imageKey, overlayEl) => {
     const next = new Set(selectedKeysRef.current);
     if (next.has(imageKey)) {
@@ -338,20 +338,24 @@ const Gallery = ({ onSignOut }) => {
       overlayEl.style.background = "rgba(40, 167, 69, 0.4)";
     }
     selectedKeysRef.current = next;
-    setSelectedCount(next.size); // only re-renders the counter, not thumbnails
+    // Debounce counter update — batches rapid taps into one React render
+    clearTimeout(countTimerRef.current);
+    countTimerRef.current = setTimeout(() => setSelectedCount(next.size), 50);
   }, []);
 
   const toggleSelectAll = () => {
     const allSelected = selectedKeysRef.current.size === images.length;
     const next = allSelected ? new Set() : new Set(images.map((img) => img.imageKey));
     selectedKeysRef.current = next;
-    setSelectedKeys(next); // triggers full re-render to repaint all overlays at once
+    // Update all overlays directly — no React re-render needed
+    const bg = allSelected ? "transparent" : "rgba(40, 167, 69, 0.4)";
+    document.querySelectorAll(".thumb-overlay").forEach((el) => { el.style.background = bg; });
     setSelectedCount(next.size);
   };
 
   const exitSelectionMode = () => {
+    clearTimeout(countTimerRef.current);
     selectedKeysRef.current = new Set();
-    setSelectedKeys(new Set());
     setSelectedCount(0);
     setSelectionMode(false);
   };
@@ -363,26 +367,21 @@ const Gallery = ({ onSignOut }) => {
     </ThumbNormal>
   ), []);
 
-  // Empty deps — never recreated, so react-image-gallery never batch re-renders thumbnails.
-  // Visual update happens via direct DOM style on the overlay element (instant).
-  const renderThumbSelect = useCallback((item) => {
-    const selected = selectedKeysRef.current.has(item.imageKey);
-    return (
-      <ThumbSelect selected={selected}>
-        <img src={item.thumbnail} alt="" draggable={false} />
-        <div
-          className="overlay"
-          style={{ background: selected ? "rgba(40, 167, 69, 0.4)" : "transparent" }}
-          onClick={(e) => {
-            e.stopPropagation();
-            e.nativeEvent.stopImmediatePropagation();
-            toggleSelect(item.imageKey, e.currentTarget);
-          }}
-        />
-      </ThumbSelect>
-    );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toggleSelect]); // toggleSelect is stable (empty deps useCallback)
+  // Stable — never recreated, thumbnails never batch re-render on selection.
+  // Overlay background is driven purely by direct DOM style updates.
+  const renderThumbSelect = useCallback((item) => (
+    <ThumbSelect>
+      <img src={item.thumbnail} alt="" draggable={false} />
+      <div
+        className="thumb-overlay"
+        onClick={(e) => {
+          e.stopPropagation();
+          e.nativeEvent.stopImmediatePropagation();
+          toggleSelect(item.imageKey, e.currentTarget);
+        }}
+      />
+    </ThumbSelect>
+  ), [toggleSelect]);
 
   if (loading) {
     return (
