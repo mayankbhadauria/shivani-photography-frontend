@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getIdToken } from "./auth";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
@@ -7,6 +8,17 @@ class PhotoAPI {
     this.client = axios.create({
       baseURL: API_BASE_URL,
       timeout: 30000, // 30 seconds for large uploads
+    });
+
+    // Attach JWT token to every request
+    this.client.interceptors.request.use(async (config) => {
+      try {
+        const token = await getIdToken();
+        config.headers.Authorization = `Bearer ${token}`;
+      } catch {
+        // No session — request will fail with 401 from backend
+      }
+      return config;
     });
   }
 

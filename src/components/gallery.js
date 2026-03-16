@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { photoAPI } from "../services/api";
 import UploadZone from "./uploadZone";
 import Header from "./header";
+import { getUserGroups } from "../services/auth";
 import "react-image-gallery/styles/css/image-gallery.css";
 
 const GalleryContainer = styled.div`
@@ -108,6 +109,22 @@ const GalleryStats = styled.div`
       cursor: not-allowed;
     }
   }
+
+  .signout-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 8px;
+    transition: background 0.3s;
+
+    &:hover {
+      background: #545b62;
+    }
+  }
 `;
 
 const GalleryWrapper = styled.div`
@@ -151,17 +168,19 @@ const ErrorMessage = styled.div`
   text-align: center;
 `;
 
-const Gallery = () => {
+const Gallery = ({ onSignOut }) => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [apiHealth, setApiHealth] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     checkApiHealth();
     loadImages();
+    getUserGroups().then((groups) => setIsAdmin(groups.includes("Admin")));
   }, []);
 
   const checkApiHealth = async () => {
@@ -209,11 +228,9 @@ const Gallery = () => {
       });
 
       if (result.summary.successful > 0) {
-        // Reload images after successful upload
         setTimeout(() => {
           loadImages();
-        }, 2000); // Give time for thumbnail generation
-        // Show success message
+        }, 2000);
         alert(`Successfully uploaded ${result.summary.successful} out of ${result.summary.total_files} images!`);
       }
 
@@ -257,7 +274,7 @@ const Gallery = () => {
     <GalleryContainer>
       <Header apiHealth={apiHealth} />
       {error && <ErrorMessage>❌ {error}</ErrorMessage>}
-      <UploadZone onUpload={handleUpload} uploading={uploading} />
+      {isAdmin && <UploadZone onUpload={handleUpload} uploading={uploading} />}
       <GalleryStats>
         <div className="stat">
           📸 <strong>{images.length}</strong> photo{images.length !== 1 ? "s" : ""} in gallery
@@ -265,9 +282,14 @@ const Gallery = () => {
         <div className="stat">
           💾 Total size: <strong>{(images.reduce((total, img) => total + (img.size || 0), 0) / 1024 / 1024).toFixed(1)} MB</strong>
         </div>
-        <button className="refresh-btn" onClick={loadImages} disabled={loading}>
-          🔄 Refresh
-        </button>
+        <div style={{ display: "flex", gap: "0" }}>
+          <button className="refresh-btn" onClick={loadImages} disabled={loading}>
+            🔄 Refresh
+          </button>
+          <button className="signout-btn" onClick={onSignOut}>
+            Sign Out
+          </button>
+        </div>
       </GalleryStats>
       {images.length === 0 ? (
         <EmptyGallery>
@@ -277,7 +299,7 @@ const Gallery = () => {
         </EmptyGallery>
       ) : (
         <GalleryWrapper style={{ position: "relative" }}>
-          <DeleteButton onClick={handleDelete}>🗑 Delete</DeleteButton>
+          {isAdmin && <DeleteButton onClick={handleDelete}>🗑 Delete</DeleteButton>}
           <ImageGallery
             items={images}
             showPlayButton={false}
