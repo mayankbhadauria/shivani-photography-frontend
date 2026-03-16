@@ -15,14 +15,12 @@ const GalleryContainer = styled.div`
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: 100vh;
 
-  /* Prevent right-click save on images */
   img {
     -webkit-user-drag: none;
     user-select: none;
     pointer-events: none;
   }
 
-  /* Re-enable pointer events on thumbnails so they're clickable */
   .image-gallery-thumbnail {
     pointer-events: all;
   }
@@ -49,11 +47,7 @@ const LoadingSpinner = styled.div`
     100% { transform: rotate(360deg); }
   }
 
-  p {
-    margin-top: 20px;
-    font-size: 18px;
-    color: #666;
-  }
+  p { margin-top: 20px; font-size: 18px; color: #666; }
 `;
 
 const EmptyGallery = styled.div`
@@ -81,17 +75,8 @@ const GalleryStats = styled.div`
   flex-wrap: wrap;
   gap: 10px;
 
-  .stat {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .btn-group {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
+  .stat { display: flex; align-items: center; gap: 8px; }
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
   button {
     color: white;
@@ -101,17 +86,26 @@ const GalleryStats = styled.div`
     cursor: pointer;
     font-size: 14px;
     transition: background 0.3s;
-
-    &:disabled {
-      background: #ccc !important;
-      cursor: not-allowed;
-    }
+    &:disabled { background: #ccc !important; cursor: not-allowed; }
   }
 
-  .refresh-btn { background: #007bff; &:hover:not(:disabled) { background: #0056b3; } }
-  .signout-btn { background: #6c757d; &:hover:not(:disabled) { background: #545b62; } }
-  .select-all-btn { background: #17a2b8; &:hover:not(:disabled) { background: #117a8b; } }
+  .refresh-btn       { background: #007bff; &:hover:not(:disabled) { background: #0056b3; } }
+  .signout-btn       { background: #6c757d; &:hover:not(:disabled) { background: #545b62; } }
+  .select-photos-btn { background: #17a2b8; &:hover:not(:disabled) { background: #117a8b; } }
+  .select-all-btn    { background: #17a2b8; &:hover:not(:disabled) { background: #117a8b; } }
   .bulk-download-btn { background: #28a745; &:hover:not(:disabled) { background: #1e7e34; } }
+  .done-btn          { background: #6c757d; &:hover:not(:disabled) { background: #545b62; } }
+`;
+
+const SelectionBanner = styled.div`
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-radius: 10px;
+  padding: 10px 20px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #2e7d32;
+  text-align: center;
 `;
 
 const GalleryWrapper = styled.div`
@@ -121,10 +115,7 @@ const GalleryWrapper = styled.div`
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   margin: 20px 0;
 
-  .image-gallery {
-    border-radius: 10px;
-    overflow: hidden;
-  }
+  .image-gallery { border-radius: 10px; overflow: hidden; }
 `;
 
 const ActionButtons = styled.div`
@@ -144,11 +135,7 @@ const ActionButton = styled.button`
   font-size: 14px;
   cursor: pointer;
   transition: background 0.2s;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
 `;
 
 const DeleteBtn = styled(ActionButton)`
@@ -170,24 +157,34 @@ const ErrorMessage = styled.div`
   text-align: center;
 `;
 
-const ThumbInner = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+// Thumbnail in normal mode — just the image
+const ThumbNormal = styled.div`
+  img { width: 100%; height: 70px; object-fit: cover; }
+`;
 
-  img {
-    width: 100%;
-    height: 70px;
-    object-fit: cover;
+// Thumbnail in selection mode — image + overlay checkbox
+const ThumbSelect = styled.div`
+  position: relative;
+  cursor: pointer;
+
+  img { width: 100%; height: 70px; object-fit: cover; display: block; }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: ${({ selected }) => selected ? "rgba(40, 167, 69, 0.35)" : "rgba(0,0,0,0.08)"};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
   }
 
-  .thumb-checkbox {
-    margin-top: 5px;
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    pointer-events: all;
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
     accent-color: #28a745;
+    cursor: pointer;
+    pointer-events: none; /* overlay handles the click */
   }
 `;
 
@@ -211,6 +208,7 @@ const Gallery = ({ onSignOut }) => {
   const [apiHealth, setApiHealth] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState(new Set());
   const [downloading, setDownloading] = useState(false);
   const [bulkDownloading, setBulkDownloading] = useState(false);
@@ -225,9 +223,8 @@ const Gallery = ({ onSignOut }) => {
     try {
       const health = await photoAPI.healthCheck();
       setApiHealth(health);
-      if (!health.s3_connected) {
+      if (!health.s3_connected)
         setError("S3 connection failed. Please check your AWS configuration.");
-      }
     } catch {
       setError("Cannot connect to API server. Make sure the backend is running.");
     }
@@ -238,7 +235,7 @@ const Gallery = ({ onSignOut }) => {
     setError(null);
     try {
       const response = await photoAPI.getImages();
-      const fetchedImages = response.images.map((img) => ({
+      setImages(response.images.map((img) => ({
         original: img.original,
         thumbnail: img.thumbnail,
         description: `Uploaded: ${new Date(img.last_modified).toLocaleDateString()}`,
@@ -246,8 +243,7 @@ const Gallery = ({ onSignOut }) => {
         originalHeight: 800,
         imageKey: img.key,
         size: img.size,
-      }));
-      setImages(fetchedImages);
+      })));
       setSelectedKeys(new Set());
     } catch {
       setError("Failed to load images. Please try again.");
@@ -266,9 +262,8 @@ const Gallery = ({ onSignOut }) => {
         setTimeout(() => loadImages(), 2000);
         alert(`Successfully uploaded ${result.summary.successful} out of ${result.summary.total_files} images!`);
       }
-      if (result.summary.failed > 0) {
+      if (result.summary.failed > 0)
         alert(`Warning: ${result.summary.failed} images failed to upload.`);
-      }
     } catch {
       setError("Upload failed. Please try again.");
     } finally {
@@ -331,6 +326,7 @@ const Gallery = ({ onSignOut }) => {
       a.click();
       URL.revokeObjectURL(url);
       setSelectedKeys(new Set());
+      setSelectionMode(false);
     } catch {
       setError("Bulk download failed. Please try again.");
     } finally {
@@ -338,8 +334,7 @@ const Gallery = ({ onSignOut }) => {
     }
   };
 
-  const toggleSelect = useCallback((imageKey, e) => {
-    e.stopPropagation();
+  const toggleSelect = useCallback((imageKey) => {
     setSelectedKeys((prev) => {
       const next = new Set(prev);
       next.has(imageKey) ? next.delete(imageKey) : next.add(imageKey);
@@ -348,25 +343,44 @@ const Gallery = ({ onSignOut }) => {
   }, []);
 
   const toggleSelectAll = () => {
-    if (selectedKeys.size === images.length) {
-      setSelectedKeys(new Set());
-    } else {
-      setSelectedKeys(new Set(images.map((img) => img.imageKey)));
-    }
+    setSelectedKeys(
+      selectedKeys.size === images.length
+        ? new Set()
+        : new Set(images.map((img) => img.imageKey))
+    );
   };
 
-  const renderThumbInner = useCallback((item) => (
-    <ThumbInner>
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedKeys(new Set());
+  };
+
+  // Normal mode: plain thumbnail, no interference
+  const renderThumbNormal = useCallback((item) => (
+    <ThumbNormal>
       <img src={item.thumbnail} alt="" draggable={false} />
-      <input
-        type="checkbox"
-        className="thumb-checkbox"
-        checked={selectedKeys.has(item.imageKey)}
-        onChange={(e) => toggleSelect(item.imageKey, e)}
-        onClick={(e) => e.stopPropagation()}
-      />
-    </ThumbInner>
-  ), [selectedKeys, toggleSelect]);
+    </ThumbNormal>
+  ), []);
+
+  // Selection mode: overlay captures click, no navigation triggered
+  const renderThumbSelect = useCallback((item) => {
+    const selected = selectedKeys.has(item.imageKey);
+    return (
+      <ThumbSelect selected={selected}>
+        <img src={item.thumbnail} alt="" draggable={false} />
+        <div
+          className="overlay"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.nativeEvent.stopImmediatePropagation();
+            toggleSelect(item.imageKey);
+          }}
+        >
+          <input type="checkbox" checked={selected} readOnly />
+        </div>
+      </ThumbSelect>
+    );
+  }, [selectedKeys, toggleSelect]);
 
   if (loading) {
     return (
@@ -385,34 +399,55 @@ const Gallery = ({ onSignOut }) => {
       <Header apiHealth={apiHealth} />
       {error && <ErrorMessage>❌ {error}</ErrorMessage>}
       {isAdmin && <UploadZone onUpload={handleUpload} uploading={uploading} />}
+
       <GalleryStats>
         <div className="stat">
           📸 <strong>{images.length}</strong> photo{images.length !== 1 ? "s" : ""} in gallery
         </div>
         <div className="stat">
-          💾 Total size: <strong>{(images.reduce((t, img) => t + (img.size || 0), 0) / 1024 / 1024).toFixed(1)} MB</strong>
+          💾 Total size:{" "}
+          <strong>
+            {(images.reduce((t, img) => t + (img.size || 0), 0) / 1024 / 1024).toFixed(1)} MB
+          </strong>
         </div>
         <div className="btn-group">
-          {images.length > 0 && (
+          {images.length > 0 && !selectionMode && (
+            <button className="select-photos-btn" onClick={() => setSelectionMode(true)}>
+              ☑ Select Photos
+            </button>
+          )}
+          {selectionMode && (
             <>
               <button className="select-all-btn" onClick={toggleSelectAll}>
                 {selectedKeys.size === images.length ? "Deselect All" : "Select All"}
               </button>
-              {selectedKeys.size > 0 && (
-                <button
-                  className="bulk-download-btn"
-                  onClick={handleBulkDownload}
-                  disabled={bulkDownloading}
-                >
-                  {bulkDownloading ? "Zipping..." : `⬇ Download Selected (${selectedKeys.size})`}
-                </button>
-              )}
+              <button
+                className="bulk-download-btn"
+                onClick={handleBulkDownload}
+                disabled={bulkDownloading || selectedKeys.size === 0}
+              >
+                {bulkDownloading ? "Zipping..." : `⬇ Download (${selectedKeys.size})`}
+              </button>
+              <button className="done-btn" onClick={exitSelectionMode}>
+                ✕ Done
+              </button>
             </>
           )}
-          <button className="refresh-btn" onClick={loadImages} disabled={loading}>🔄 Refresh</button>
-          <button className="signout-btn" onClick={onSignOut}>Sign Out</button>
+          <button className="refresh-btn" onClick={loadImages} disabled={loading}>
+            🔄 Refresh
+          </button>
+          <button className="signout-btn" onClick={onSignOut}>
+            Sign Out
+          </button>
         </div>
       </GalleryStats>
+
+      {selectionMode && (
+        <SelectionBanner>
+          Selection mode — tap thumbnails to select. {selectedKeys.size > 0 ? `${selectedKeys.size} selected.` : "None selected yet."}
+        </SelectionBanner>
+      )}
+
       {images.length === 0 ? (
         <EmptyGallery>
           <div className="icon">📷</div>
@@ -421,16 +456,18 @@ const Gallery = ({ onSignOut }) => {
         </EmptyGallery>
       ) : (
         <GalleryWrapper style={{ position: "relative" }}>
-          <ActionButtons>
-            <DownloadBtn onClick={handleDownload} disabled={downloading}>
-              {downloading ? "..." : "⬇ Download"}
-            </DownloadBtn>
-            {isAdmin && <DeleteBtn onClick={handleDelete}>🗑 Delete</DeleteBtn>}
-          </ActionButtons>
+          {!selectionMode && (
+            <ActionButtons>
+              <DownloadBtn onClick={handleDownload} disabled={downloading}>
+                {downloading ? "..." : "⬇ Download"}
+              </DownloadBtn>
+              {isAdmin && <DeleteBtn onClick={handleDelete}>🗑 Delete</DeleteBtn>}
+            </ActionButtons>
+          )}
           <ImageGallery
             items={images}
             showPlayButton={false}
-            showFullscreenButton={true}
+            showFullscreenButton={!selectionMode}
             showThumbnails={true}
             thumbnailPosition="bottom"
             slideDuration={450}
@@ -441,7 +478,7 @@ const Gallery = ({ onSignOut }) => {
             lazyLoad={true}
             additionalClass="custom-image-gallery"
             onSlide={(index) => setCurrentIndex(index)}
-            renderThumbInner={renderThumbInner}
+            renderThumbInner={selectionMode ? renderThumbSelect : renderThumbNormal}
           />
         </GalleryWrapper>
       )}
