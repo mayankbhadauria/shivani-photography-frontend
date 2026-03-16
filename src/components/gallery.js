@@ -177,15 +177,29 @@ const ThumbSelect = styled.div`
 `;
 
 const fetchWithRetry = async (url, retries = 2) => {
+  let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { mode: "cors", cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.blob();
     } catch (err) {
-      if (attempt === retries) throw err;
+      lastErr = err;
+      console.error(`Download attempt ${attempt + 1} failed for ${url}:`, err);
     }
   }
+  throw lastErr;
+};
+
+const triggerDownload = (blob, filename) => {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
 const Gallery = ({ onSignOut }) => {
@@ -282,13 +296,9 @@ const Gallery = ({ onSignOut }) => {
     setError(null);
     try {
       const blob = await fetchWithRetry(image.original);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = image.imageKey.split("/").pop();
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
+      triggerDownload(blob, image.imageKey.split("/").pop());
+    } catch (err) {
+      console.error("Single download failed:", err);
       setError("Download failed after 2 retries. Please try again.");
     } finally {
       setDownloading(false);
@@ -309,14 +319,22 @@ const Gallery = ({ onSignOut }) => {
         })
       );
       const failed = results.filter((r) => r.status === "rejected").length;
-      if (failed > 0) setError(`${failed} image(s) failed to download and were skipped.`);
+
+      if (failed === selected.length) {
+        setError("All downloads failed. Check the browser console for details.");
+        return;
+      }
+
+      if (failed > 0) setError(`${failed} image(s) failed and were skipped.`);
+
+      const fileCount = Object.keys(zip.files).length;
+      if (fileCount === 0) {
+        setError("Nothing to download — all images failed.");
+        return;
+      }
+
       const content = await zip.generateAsync({ type: "blob" });
-      const url = URL.createObjectURL(content);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "photos.zip";
-      a.click();
-      URL.revokeObjectURL(url);
+      triggerDownload(content, "photos.zip");
       selectedKeysRef.current = new Set();
       setSelectedCount(0);
       setSelectionMode(false);
