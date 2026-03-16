@@ -239,10 +239,11 @@ const Gallery = ({ onSignOut }) => {
     setError(null);
     try {
       const response = await photoAPI.getImages();
+      // description (upload date) stored on item but rendered conditionally via isAdminRef
       setImages(response.images.map((img) => ({
         original: img.original,
         thumbnail: img.thumbnail,
-        description: `Uploaded: ${new Date(img.last_modified).toLocaleDateString()}`,
+        uploadedDate: new Date(img.last_modified).toLocaleDateString(),
         originalWidth: 1200,
         originalHeight: 800,
         imageKey: img.key,
@@ -413,22 +414,37 @@ const Gallery = ({ onSignOut }) => {
     );
   }
 
+  const currentImage = images[currentIndex];
+  const totalSizeMB = (images.reduce((t, img) => t + (img.size || 0), 0) / 1024 / 1024).toFixed(1);
+  const currentSizeMB = currentImage ? (currentImage.size / 1024 / 1024).toFixed(2) : null;
+
   return (
-    <GalleryContainer onContextMenu={(e) => e.preventDefault()}>
+    <GalleryContainer onContextMenu={isAdmin ? undefined : (e) => e.preventDefault()}>
       <Header apiHealth={apiHealth} />
       {error && <ErrorMessage>❌ {error}</ErrorMessage>}
       {isAdmin && <UploadZone onUpload={handleUpload} uploading={uploading} />}
 
       <GalleryStats>
-        <div className="stat">
-          📸 <strong>{images.length}</strong> photo{images.length !== 1 ? "s" : ""} in gallery
-        </div>
-        <div className="stat">
-          💾 Total size:{" "}
-          <strong>
-            {(images.reduce((t, img) => t + (img.size || 0), 0) / 1024 / 1024).toFixed(1)} MB
-          </strong>
-        </div>
+        {isAdmin && (
+          <div className="stat">
+            📸 <strong>{images.length}</strong> photo{images.length !== 1 ? "s" : ""} in gallery
+          </div>
+        )}
+        {isAdmin && (
+          <div className="stat">
+            💾 Total: <strong>{totalSizeMB} MB</strong>
+            {currentSizeMB && (
+              <span style={{ marginLeft: 12, color: "#444" }}>
+                | This image: <strong>{currentSizeMB} MB</strong>
+              </span>
+            )}
+          </div>
+        )}
+        {isAdmin && currentImage && (
+          <div className="stat" style={{ color: "#888", fontSize: 13 }}>
+            🗓 Uploaded: <strong>{currentImage.uploadedDate}</strong>
+          </div>
+        )}
         <div className="btn-group">
           {images.length > 0 && !selectionMode && (
             <button className="select-photos-btn" onClick={() => setSelectionMode(true)}>
@@ -484,7 +500,10 @@ const Gallery = ({ onSignOut }) => {
             </ActionButtons>
           )}
           <ImageGallery
-            items={images}
+            items={images.map((img) => ({
+              ...img,
+              description: isAdmin ? `Uploaded: ${img.uploadedDate}` : undefined,
+            }))}
             showPlayButton={false}
             showFullscreenButton={!selectionMode}
             showThumbnails={true}
