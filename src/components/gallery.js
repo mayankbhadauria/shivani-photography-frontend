@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import ImageGallery from "react-image-gallery";
 import JSZip from "jszip";
 import styled from "styled-components";
@@ -199,6 +199,8 @@ const Gallery = ({ onSignOut }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState(new Set());
+  const [selectedCount, setSelectedCount] = useState(0);
+  const selectedKeysRef = useRef(new Set());
   const [downloading, setDownloading] = useState(false);
   const [bulkDownloading, setBulkDownloading] = useState(false);
 
@@ -293,12 +295,12 @@ const Gallery = ({ onSignOut }) => {
   };
 
   const handleBulkDownload = async () => {
-    if (selectedKeys.size === 0) return;
+    if (selectedKeysRef.current.size === 0) return;
     setBulkDownloading(true);
     setError(null);
     try {
       const zip = new JSZip();
-      const selected = images.filter((img) => selectedKeys.has(img.imageKey));
+      const selected = images.filter((img) => selectedKeysRef.current.has(img.imageKey));
       const results = await Promise.allSettled(
         selected.map(async (img) => {
           const blob = await fetchWithRetry(img.original);
@@ -314,7 +316,9 @@ const Gallery = ({ onSignOut }) => {
       a.download = "photos.zip";
       a.click();
       URL.revokeObjectURL(url);
+      selectedKeysRef.current = new Set();
       setSelectedKeys(new Set());
+      setSelectedCount(0);
       setSelectionMode(false);
     } catch {
       setError("Bulk download failed. Please try again.");
@@ -323,25 +327,33 @@ const Gallery = ({ onSignOut }) => {
     }
   };
 
-  const toggleSelect = useCallback((imageKey) => {
-    setSelectedKeys((prev) => {
-      const next = new Set(prev);
-      next.has(imageKey) ? next.delete(imageKey) : next.add(imageKey);
-      return next;
-    });
+  // Instant DOM update for highlight — no React re-render of thumbnails
+  const toggleSelect = useCallback((imageKey, overlayEl) => {
+    const next = new Set(selectedKeysRef.current);
+    if (next.has(imageKey)) {
+      next.delete(imageKey);
+      overlayEl.style.background = "transparent";
+    } else {
+      next.add(imageKey);
+      overlayEl.style.background = "rgba(40, 167, 69, 0.4)";
+    }
+    selectedKeysRef.current = next;
+    setSelectedCount(next.size); // only re-renders the counter, not thumbnails
   }, []);
 
   const toggleSelectAll = () => {
-    setSelectedKeys(
-      selectedKeys.size === images.length
-        ? new Set()
-        : new Set(images.map((img) => img.imageKey))
-    );
+    const allSelected = selectedKeysRef.current.size === images.length;
+    const next = allSelected ? new Set() : new Set(images.map((img) => img.imageKey));
+    selectedKeysRef.current = next;
+    setSelectedKeys(next); // triggers full re-render to repaint all overlays at once
+    setSelectedCount(next.size);
   };
 
   const exitSelectionMode = () => {
-    setSelectionMode(false);
+    selectedKeysRef.current = new Set();
     setSelectedKeys(new Set());
+    setSelectedCount(0);
+    setSelectionMode(false);
   };
 
   // Normal mode: plain thumbnail, no interference
@@ -351,23 +363,26 @@ const Gallery = ({ onSignOut }) => {
     </ThumbNormal>
   ), []);
 
-  // Selection mode: overlay captures click, no navigation triggered
+  // Empty deps — never recreated, so react-image-gallery never batch re-renders thumbnails.
+  // Visual update happens via direct DOM style on the overlay element (instant).
   const renderThumbSelect = useCallback((item) => {
-    const selected = selectedKeys.has(item.imageKey);
+    const selected = selectedKeysRef.current.has(item.imageKey);
     return (
       <ThumbSelect selected={selected}>
         <img src={item.thumbnail} alt="" draggable={false} />
         <div
           className="overlay"
+          style={{ background: selected ? "rgba(40, 167, 69, 0.4)" : "transparent" }}
           onClick={(e) => {
             e.stopPropagation();
             e.nativeEvent.stopImmediatePropagation();
-            toggleSelect(item.imageKey);
+            toggleSelect(item.imageKey, e.currentTarget);
           }}
         />
       </ThumbSelect>
     );
-  }, [selectedKeys, toggleSelect]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toggleSelect]); // toggleSelect is stable (empty deps useCallback)
 
   if (loading) {
     return (
@@ -406,14 +421,14 @@ const Gallery = ({ onSignOut }) => {
           {selectionMode && (
             <>
               <button className="select-all-btn" onClick={toggleSelectAll}>
-                {selectedKeys.size === images.length ? "Deselect All" : "Select All"}
+                {selectedCount === images.length ? "Deselect All" : "Select All"}
               </button>
               <button
                 className="bulk-download-btn"
                 onClick={handleBulkDownload}
-                disabled={bulkDownloading || selectedKeys.size === 0}
+                disabled={bulkDownloading || selectedCount === 0}
               >
-                {bulkDownloading ? "Zipping..." : `⬇ Download (${selectedKeys.size})`}
+                {bulkDownloading ? "Zipping..." : `⬇ Download (${selectedCount})`}
               </button>
               <button className="done-btn" onClick={exitSelectionMode}>
                 ✕ Done
@@ -431,7 +446,7 @@ const Gallery = ({ onSignOut }) => {
 
       {selectionMode && (
         <SelectionBanner>
-          Selection mode — tap thumbnails to select. {selectedKeys.size > 0 ? `${selectedKeys.size} selected.` : "None selected yet."}
+          Selection mode — tap thumbnails to select. {selectedCount > 0 ? `${selectedCount} selected.` : "None selected yet."}
         </SelectionBanner>
       )}
 
