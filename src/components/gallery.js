@@ -172,19 +172,8 @@ const ThumbSelect = styled.div`
   .overlay {
     position: absolute;
     inset: 0;
-    background: ${({ selected }) => selected ? "rgba(40, 167, 69, 0.35)" : "rgba(0,0,0,0.08)"};
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: ${({ selected }) => selected ? "rgba(40, 167, 69, 0.4)" : "transparent"};
     transition: background 0.15s;
-  }
-
-  input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    accent-color: #28a745;
-    cursor: pointer;
-    pointer-events: none; /* overlay handles the click */
   }
 `;
 
@@ -375,9 +364,7 @@ const Gallery = ({ onSignOut }) => {
             e.nativeEvent.stopImmediatePropagation();
             toggleSelect(item.imageKey);
           }}
-        >
-          <input type="checkbox" checked={selected} readOnly />
-        </div>
+        />
       </ThumbSelect>
     );
   }, [selectedKeys, toggleSelect]);
