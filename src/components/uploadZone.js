@@ -217,7 +217,7 @@ const UploadZone = ({ onUpload, uploading }) => {
       <DropzoneArea {...getRootProps()} isDragActive={isDragActive}>
         <input {...getInputProps()} />
         <div className="upload-icon">
-          {isDragActive ? '📤' : '📸'}
+          {isDragActive ? '📤' : ''}
         </div>
         <div className="upload-text">
           {isDragActive ? 'Drop your photos here!' : 'Add Photos to Your Portfolio'}

@@ -20,6 +20,17 @@ class PhotoAPI {
       }
       return config;
     });
+
+    // On 401, dispatch event so App.js can redirect to login
+    this.client.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          window.dispatchEvent(new Event('auth:expired'));
+        }
+        return Promise.reject(error);
+      }
+    );
   }
 
   // Health check
@@ -33,10 +44,11 @@ class PhotoAPI {
     }
   }
 
-  // Get all images
-  async getImages() {
+  // Get a page of images (limit=10 by default)
+  async getImages(offset = 0) {
     try {
-      const response = await this.client.get("/api/images");
+      const params = { limit: 10, offset };
+      const response = await this.client.get("/api/images", { params });
       return response.data;
     } catch (error) {
       console.error("Failed to fetch images:", error);
@@ -54,17 +66,31 @@ class PhotoAPI {
       }));
       const { data } = await this.client.post("/api/presigned-upload", { files: fileInfos });
 
-      // Step 2: upload each file directly to S3
+      // Step 2: upload each file directly to S3, max 3 concurrent
       let completed = 0;
-      await Promise.all(
-        data.urls.map(async (urlInfo, i) => {
-          await axios.put(urlInfo.url, files[i], {
-            headers: { "Content-Type": urlInfo.content_type },
-          });
-          completed++;
-          if (onProgress) onProgress(Math.round((completed / data.urls.length) * 100));
-        })
-      );
+      const CONCURRENCY = 3;
+      const uploadBatch = async (batch, startIdx) => {
+        await Promise.all(
+          batch.map(async (urlInfo, batchIdx) => {
+            await axios.put(urlInfo.url, files[startIdx + batchIdx], {
+              headers: { "Content-Type": urlInfo.content_type },
+            });
+            completed++;
+            if (onProgress) onProgress(Math.round((completed / data.urls.length) * 100));
+          })
+        );
+      };
+      for (let i = 0; i < data.urls.length; i += CONCURRENCY) {
+        await uploadBatch(data.urls.slice(i, i + CONCURRENCY), i);
+      }
+
+      // Generate thumbnails for uploaded images
+      const uploadedKeys = data.urls.map(u => u.key);
+      try {
+        await this.client.post("/api/process-thumbnails", { keys: uploadedKeys });
+      } catch (e) {
+        console.warn("Thumbnail generation failed (non-fatal):", e);
+      }
 
       return {
         status: "completed",

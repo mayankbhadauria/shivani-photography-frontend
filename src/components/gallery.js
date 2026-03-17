@@ -12,17 +12,13 @@ const GalleryContainer = styled.div`
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, #f0f8ff 0%, #dceefb 100%);
   min-height: 100vh;
 
   img {
     -webkit-user-drag: none;
     user-select: none;
     pointer-events: none;
-  }
-
-  .image-gallery-thumbnail {
-    pointer-events: all;
   }
 `;
 
@@ -75,8 +71,9 @@ const GalleryStats = styled.div`
   flex-wrap: wrap;
   gap: 10px;
 
+  .stats-left { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .stat { display: flex; align-items: center; gap: 8px; }
-  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-left: auto; }
 
   button {
     color: white;
@@ -89,63 +86,143 @@ const GalleryStats = styled.div`
     &:disabled { background: #ccc !important; cursor: not-allowed; }
   }
 
-  .refresh-btn       { background: #007bff; &:hover:not(:disabled) { background: #0056b3; } }
-  .signout-btn       { background: #6c757d; &:hover:not(:disabled) { background: #545b62; } }
-  .select-photos-btn { background: #17a2b8; &:hover:not(:disabled) { background: #117a8b; } }
-  .select-all-btn    { background: #17a2b8; &:hover:not(:disabled) { background: #117a8b; } }
-  .bulk-download-btn { background: #28a745; &:hover:not(:disabled) { background: #1e7e34; } }
-  .done-btn          { background: #6c757d; &:hover:not(:disabled) { background: #545b62; } }
+  .refresh-btn       { background: #4a9fd4; &:hover:not(:disabled) { background: #2e86c1; } }
+  .signout-btn       { background: #7ab8d9; &:hover:not(:disabled) { background: #4a9fd4; } }
+  .select-photos-btn { background: #4a9fd4; &:hover:not(:disabled) { background: #2e86c1; } }
+  .select-all-btn    { background: #4a9fd4; &:hover:not(:disabled) { background: #2e86c1; } }
+  .bulk-download-btn { background: #2e86c1; &:hover:not(:disabled) { background: #1a6a9f; } }
+  .done-btn          { background: #7ab8d9; &:hover:not(:disabled) { background: #4a9fd4; } }
 `;
 
 const SelectionBanner = styled.div`
-  background: #e8f5e9;
-  border: 1px solid #a5d6a7;
+  background: #ddeeff;
+  border: 1px solid #90b8f0;
   border-radius: 10px;
   padding: 10px 20px;
   margin-bottom: 10px;
   font-size: 14px;
-  color: #2e7d32;
+  color: #0d3d99;
   text-align: center;
 `;
 
 const GalleryWrapper = styled.div`
   background: white;
   padding: 20px;
-  border-radius: 15px;
+  border-radius: 15px 15px 0 0;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  margin: 20px 0;
+  margin: 20px 0 0;
 
   .image-gallery { border-radius: 10px; overflow: hidden; }
+`;
+
+const ThumbnailStrip = styled.div`
+  background: white;
+  border-radius: 0 0 15px 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 10px 0 14px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .thumb-nav {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    font-size: 78px;
+    line-height: 1;
+    color: #555;
+    cursor: pointer;
+    padding: 0 10px;
+    pointer-events: all;
+    &:disabled { color: #ccc; cursor: default; }
+    &:hover:not(:disabled) { color: #007bff; }
+  }
+
+  .thumb-list {
+    display: flex;
+    flex: 1;
+    gap: 4px;
+    overflow: hidden;
+    justify-content: center;
+  }
+
+  .thumb-item {
+    position: relative;
+    width: 125px;
+    height: 87px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent;
+    pointer-events: all;
+
+    &.active { border-color: #337ab7; }
+    &:hover:not(.active) { border-color: #aac8e8; }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .thumb-overlay {
+      position: absolute;
+      inset: 0;
+    }
+  }
 `;
 
 const ActionButtons = styled.div`
   position: absolute;
   top: 15px;
-  right: 15px;
+  left: 15px;
   z-index: 10;
   display: flex;
   gap: 8px;
 `;
 
-const ActionButton = styled.button`
+const DeleteBtn = styled.button`
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 8px 14px;
-  font-size: 14px;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.15s;
+  background: rgba(180, 30, 45, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(180, 30, 45, 0.35);
+  &:hover:not(:disabled) { background: rgba(155, 15, 30, 0.95); transform: scale(1.08); }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 `;
 
-const DeleteBtn = styled(ActionButton)`
-  background: rgba(220, 53, 69, 0.85);
-  &:hover:not(:disabled) { background: rgba(185, 28, 45, 0.95); }
-`;
-
-const DownloadBtn = styled(ActionButton)`
-  background: rgba(40, 167, 69, 0.85);
-  &:hover:not(:disabled) { background: rgba(30, 126, 52, 0.95); }
+const DownloadFab = styled.button`
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(74, 159, 212, 0.85);
+  color: white;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 3px 10px rgba(74, 159, 212, 0.4);
+  &:hover:not(:disabled) { background: rgba(46, 134, 193, 0.95); transform: scale(1.08); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
 const ErrorMessage = styled.div`
@@ -155,25 +232,6 @@ const ErrorMessage = styled.div`
   border-radius: 10px;
   margin: 20px 0;
   text-align: center;
-`;
-
-// Thumbnail in normal mode — just the image
-const ThumbNormal = styled.div`
-  img { width: 100%; height: 70px; object-fit: cover; }
-`;
-
-// Thumbnail in selection mode — overlay toggled via direct DOM, no styled-component prop
-const ThumbSelect = styled.div`
-  position: relative;
-  cursor: pointer;
-
-  img { width: 100%; height: 70px; object-fit: cover; display: block; }
-
-  .thumb-overlay {
-    position: absolute;
-    inset: 0;
-    background: transparent;
-  }
 `;
 
 const fetchWithRetry = async (url, retries = 2) => {
@@ -202,6 +260,8 @@ const triggerDownload = (blob, filename) => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
+const THUMBS_VISIBLE = 10;
+
 const Gallery = ({ onSignOut }) => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -210,18 +270,32 @@ const Gallery = ({ onSignOut }) => {
   const [apiHealth, setApiHealth] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextOffset, setNextOffset] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedCount, setSelectedCount] = useState(0);
+  const [thumbStart, setThumbStart] = useState(0);
   const selectedKeysRef = useRef(new Set());
   const countTimerRef = useRef(null);
+  const galleryRef = useRef(null);
   const [downloading, setDownloading] = useState(false);
   const [bulkDownloading, setBulkDownloading] = useState(false);
+
+  // Keep active thumbnail visible in strip when main image changes
+  useEffect(() => {
+    setThumbStart((s) => {
+      if (currentIndex < s) return currentIndex;
+      if (currentIndex >= s + THUMBS_VISIBLE) return Math.max(0, currentIndex - THUMBS_VISIBLE + 1);
+      return s;
+    });
+  }, [currentIndex]);
 
   useEffect(() => {
     checkApiHealth();
     loadImages();
     getUserGroups().then((groups) => setIsAdmin(groups.includes("Admin")));
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkApiHealth = async () => {
     try {
@@ -234,27 +308,49 @@ const Gallery = ({ onSignOut }) => {
     }
   };
 
+  const mapImages = (raw) => raw.map((img) => ({
+    original: img.display || img.original,   // carousel shows display size (~300KB)
+    downloadUrl: img.original,               // download fetches full original
+    thumbnail: img.thumbnail,
+    uploadedDate: new Date(img.last_modified).toLocaleDateString(),
+    originalWidth: 1200,
+    originalHeight: 800,
+    imageKey: img.key,
+    size: img.size,
+  }));
+
   const loadImages = async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await photoAPI.getImages();
-      // description (upload date) stored on item but rendered conditionally via isAdminRef
-      setImages(response.images.map((img) => ({
-        original: img.original,
-        thumbnail: img.thumbnail,
-        uploadedDate: new Date(img.last_modified).toLocaleDateString(),
-        originalWidth: 1200,
-        originalHeight: 800,
-        imageKey: img.key,
-        size: img.size,
-      })));
+      setImages(mapImages(response.images));
+      setHasMore(response.has_more);
+      setNextOffset(response.next_token);
+      setCurrentIndex(0);
+      setThumbStart(0);
       selectedKeysRef.current = new Set();
       setSelectedCount(0);
     } catch {
       setError("Failed to load images. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMore = async () => {
+    if (nextOffset === null || loadingMore) return;
+    setLoadingMore(true);
+    setError(null);
+    try {
+      const response = await photoAPI.getImages(nextOffset);
+      setImages((prev) => [...prev, ...mapImages(response.images)]);
+      setHasMore(response.has_more);
+      setNextOffset(response.next_token);
+    } catch {
+      setError("Failed to load more images. Please try again.");
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -296,7 +392,7 @@ const Gallery = ({ onSignOut }) => {
     setDownloading(true);
     setError(null);
     try {
-      const blob = await fetchWithRetry(image.original);
+      const blob = await fetchWithRetry(image.downloadUrl);
       triggerDownload(blob, image.imageKey.split("/").pop());
     } catch (err) {
       console.error("Single download failed:", err);
@@ -315,7 +411,7 @@ const Gallery = ({ onSignOut }) => {
       const selected = images.filter((img) => selectedKeysRef.current.has(img.imageKey));
       const results = await Promise.allSettled(
         selected.map(async (img) => {
-          const blob = await fetchWithRetry(img.original);
+          const blob = await fetchWithRetry(img.downloadUrl);
           zip.file(img.imageKey.split("/").pop(), blob);
         })
       );
@@ -357,7 +453,6 @@ const Gallery = ({ onSignOut }) => {
       overlayEl.style.background = "rgba(40, 167, 69, 0.4)";
     }
     selectedKeysRef.current = next;
-    // Debounce counter update — batches rapid taps into one React render
     clearTimeout(countTimerRef.current);
     countTimerRef.current = setTimeout(() => setSelectedCount(next.size), 50);
   }, []);
@@ -366,8 +461,7 @@ const Gallery = ({ onSignOut }) => {
     const allSelected = selectedKeysRef.current.size === images.length;
     const next = allSelected ? new Set() : new Set(images.map((img) => img.imageKey));
     selectedKeysRef.current = next;
-    // Update all overlays directly — no React re-render needed
-    const bg = allSelected ? "transparent" : "rgba(40, 167, 69, 0.4)";
+    const bg = allSelected ? "transparent" : "rgba(26, 86, 196, 0.45)";
     document.querySelectorAll(".thumb-overlay").forEach((el) => { el.style.background = bg; });
     setSelectedCount(next.size);
   };
@@ -378,29 +472,6 @@ const Gallery = ({ onSignOut }) => {
     setSelectedCount(0);
     setSelectionMode(false);
   };
-
-  // Normal mode: plain thumbnail, no interference
-  const renderThumbNormal = useCallback((item) => (
-    <ThumbNormal>
-      <img src={item.thumbnail} alt="" draggable={false} />
-    </ThumbNormal>
-  ), []);
-
-  // Stable — never recreated, thumbnails never batch re-render on selection.
-  // Overlay background is driven purely by direct DOM style updates.
-  const renderThumbSelect = useCallback((item) => (
-    <ThumbSelect>
-      <img src={item.thumbnail} alt="" draggable={false} />
-      <div
-        className="thumb-overlay"
-        onClick={(e) => {
-          e.stopPropagation();
-          e.nativeEvent.stopImmediatePropagation();
-          toggleSelect(item.imageKey, e.currentTarget);
-        }}
-      />
-    </ThumbSelect>
-  ), [toggleSelect]);
 
   if (loading) {
     return (
@@ -420,31 +491,34 @@ const Gallery = ({ onSignOut }) => {
 
   return (
     <GalleryContainer onContextMenu={isAdmin ? undefined : (e) => e.preventDefault()}>
-      <Header apiHealth={apiHealth} />
+      <Header apiHealth={apiHealth} isAdmin={isAdmin} />
       {error && <ErrorMessage>❌ {error}</ErrorMessage>}
       {isAdmin && <UploadZone onUpload={handleUpload} uploading={uploading} />}
 
       <GalleryStats>
-        {isAdmin && (
-          <div className="stat">
-            📸 <strong>{images.length}</strong> photo{images.length !== 1 ? "s" : ""} in gallery
-          </div>
-        )}
-        {isAdmin && (
-          <div className="stat">
-            💾 Total: <strong>{totalSizeMB} MB</strong>
-            {currentSizeMB && (
-              <span style={{ marginLeft: 12, color: "#444" }}>
-                | This image: <strong>{currentSizeMB} MB</strong>
-              </span>
-            )}
-          </div>
-        )}
-        {isAdmin && currentImage && (
-          <div className="stat" style={{ color: "#888", fontSize: 13 }}>
-            🗓 Uploaded: <strong>{currentImage.uploadedDate}</strong>
-          </div>
-        )}
+        <div className="stats-left">
+          {isAdmin && (
+            <div className="stat">
+              📸 <strong>{images.length}</strong> photo{images.length !== 1 ? "s" : ""} loaded
+              {hasMore && <span style={{ color: "#aaa", marginLeft: 6, fontSize: 13 }}>(more available)</span>}
+            </div>
+          )}
+          {isAdmin && (
+            <div className="stat">
+              💾 Total: <strong>{totalSizeMB} MB</strong>
+              {currentSizeMB && (
+                <span style={{ marginLeft: 12, color: "#444" }}>
+                  | This image: <strong>{currentSizeMB} MB</strong>
+                </span>
+              )}
+            </div>
+          )}
+          {isAdmin && currentImage && (
+            <div className="stat" style={{ color: "#888", fontSize: 13 }}>
+              🗓 Uploaded: <strong>{currentImage.uploadedDate}</strong>
+            </div>
+          )}
+        </div>
         <div className="btn-group">
           {images.length > 0 && !selectionMode && (
             <button className="select-photos-btn" onClick={() => setSelectionMode(true)}>
@@ -490,35 +564,105 @@ const Gallery = ({ onSignOut }) => {
           <p>Upload your first photos to start building your beautiful portfolio!</p>
         </EmptyGallery>
       ) : (
-        <GalleryWrapper style={{ position: "relative" }}>
-          {!selectionMode && (
-            <ActionButtons>
-              <DownloadBtn onClick={handleDownload} disabled={downloading}>
-                {downloading ? "..." : "⬇ Download"}
-              </DownloadBtn>
-              {isAdmin && <DeleteBtn onClick={handleDelete}>🗑 Delete</DeleteBtn>}
-            </ActionButtons>
-          )}
-          <ImageGallery
-            items={images.map((img) => ({
-              ...img,
-              description: isAdmin ? `Uploaded: ${img.uploadedDate}` : undefined,
-            }))}
-            showPlayButton={false}
-            showFullscreenButton={!selectionMode}
-            showThumbnails={true}
-            thumbnailPosition="bottom"
-            slideDuration={450}
-            slideInterval={2000}
-            showIndex={true}
-            showBullets={false}
-            infinite={true}
-            lazyLoad={true}
-            additionalClass="custom-image-gallery"
-            onSlide={(index) => setCurrentIndex(index)}
-            renderThumbInner={selectionMode ? renderThumbSelect : renderThumbNormal}
-          />
-        </GalleryWrapper>
+        <>
+          <GalleryWrapper style={{ position: "relative" }}>
+            {!selectionMode && (
+              <>
+                {isAdmin && (
+                  <ActionButtons>
+                    <DeleteBtn onClick={handleDelete} title="Delete">🗑</DeleteBtn>
+                  </ActionButtons>
+                )}
+                <DownloadFab onClick={handleDownload} disabled={downloading} title="Download">
+                  {downloading ? "…" : "↓"}
+                </DownloadFab>
+              </>
+            )}
+            <ImageGallery
+              ref={galleryRef}
+              items={images.map((img) => ({
+                ...img,
+                description: isAdmin ? `Uploaded: ${img.uploadedDate}` : undefined,
+              }))}
+              showPlayButton={false}
+              showFullscreenButton={!selectionMode}
+              showThumbnails={false}
+              slideDuration={450}
+              slideInterval={2000}
+              showIndex={true}
+              showBullets={false}
+              infinite={true}
+              lazyLoad={true}
+              additionalClass="custom-image-gallery"
+              onSlide={(index) => setCurrentIndex(index)}
+            />
+          </GalleryWrapper>
+
+          {/* Custom thumbnail carousel — fully independent of main image nav */}
+          <ThumbnailStrip>
+            <button
+              className="thumb-nav"
+              onClick={() => setThumbStart((s) => Math.max(0, s - 1))}
+              disabled={thumbStart === 0}
+            >
+              ‹
+            </button>
+            <div className="thumb-list">
+              {images.slice(thumbStart, thumbStart + THUMBS_VISIBLE).map((img, i) => {
+                const imgIdx = thumbStart + i;
+                const isSelected = selectedKeysRef.current.has(img.imageKey);
+                return (
+                  <div
+                    key={img.imageKey}
+                    className={`thumb-item${imgIdx === currentIndex ? " active" : ""}`}
+                    onClick={() => {
+                      if (!selectionMode) galleryRef.current?.slideToIndex(imgIdx);
+                    }}
+                  >
+                    <img src={img.thumbnail} alt="" draggable={false} />
+                    {selectionMode && (
+                      <div
+                        className="thumb-overlay"
+                        style={{ background: isSelected ? "rgba(26, 86, 196, 0.45)" : "transparent" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSelect(img.imageKey, e.currentTarget);
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <button
+              className="thumb-nav"
+              onClick={() => setThumbStart((s) => Math.min(images.length - THUMBS_VISIBLE, s + 1))}
+              disabled={thumbStart + THUMBS_VISIBLE >= images.length}
+            >
+              ›
+            </button>
+          </ThumbnailStrip>
+        </>
+      )}
+
+      {hasMore && (
+        <div style={{ textAlign: "center", margin: "16px 0 8px" }}>
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            style={{
+              background: loadingMore ? "#ccc" : "#4a9fd4",
+              color: "white",
+              border: "none",
+              padding: "10px 28px",
+              borderRadius: 6,
+              fontSize: 15,
+              cursor: loadingMore ? "not-allowed" : "pointer",
+            }}
+          >
+            {loadingMore ? "Loading..." : "Load more"}
+          </button>
+        </div>
       )}
     </GalleryContainer>
   );
