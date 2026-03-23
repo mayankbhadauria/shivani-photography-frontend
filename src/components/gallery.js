@@ -1,670 +1,374 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import ImageGallery from "react-image-gallery";
-import JSZip from "jszip";
-import styled from "styled-components";
+import styled, { createGlobalStyle, keyframes } from "styled-components";
 import { photoAPI } from "../services/api";
-import UploadZone from "./uploadZone";
-import Header from "./header";
-import { getUserGroups } from "../services/auth";
-import "react-image-gallery/styles/css/image-gallery.css";
 
-const GalleryContainer = styled.div`
-  max-width: 1400px;
+/* ─── Tokens ──────────────────────────────────────────── */
+const T = {
+  cream:  "#fdf8f3",
+  white:  "#ffffff",
+  black:  "#111111",
+  mid:    "#6b6155",
+  light:  "#a89e92",
+  border: "#e8e3dc",
+};
+
+/* ─── Category meta ───────────────────────────────────── */
+const CAT_META = {
+  "maternity": {
+    label:    "Maternity",
+    heading:  "Capturing Motherhood",
+    tagline:  "Every curve, every glow — the magic of new life beautifully told.",
+  },
+  "family-kids": {
+    label:    "Family & Kids",
+    heading:  "Family Stories",
+    tagline:  "Genuine laughter, little hands, real moments that last a lifetime.",
+  },
+  "creative-portrait": {
+    label:    "Creative Portrait",
+    heading:  "Creative Portraits",
+    tagline:  "Your story, your light — portraits that feel entirely like you.",
+  },
+  "brand-shoot": {
+    label:    "Brand Shoot",
+    heading:  "Brand Sessions",
+    tagline:  "Elevating your brand with images that speak before you say a word.",
+  },
+};
+
+/* ─── Styled ──────────────────────────────────────────── */
+const GlobalGallery = createGlobalStyle`
+  body { background: ${T.white}; margin: 0; }
+`;
+
+const Nav = styled.nav`
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 48px;
+  background: ${T.white};
+  border-bottom: 1px solid ${T.border};
+  @media (max-width: 768px) { padding: 16px 20px; }
+`;
+
+const NavLeft = styled.div`
+  display: flex; gap: 28px; align-items: center;
+  @media (max-width: 600px) { gap: 16px; }
+`;
+
+const NavBtn = styled.button`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px; font-weight: 300;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: ${T.mid}; background: none; border: none;
+  cursor: pointer; padding: 0; transition: color 0.2s;
+  &:hover { color: ${T.black}; }
+`;
+
+const NavLogo = styled.div`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px; font-weight: 300;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: ${T.black}; flex: 1; text-align: center;
+  @media (max-width: 600px) { font-size: 9px; letter-spacing: 0.15em; }
+`;
+
+const NavRight = styled(NavLeft)`justify-content: flex-end;`;
+
+/* Hero / header */
+const GalleryHeader = styled.div`
+  padding: 140px 80px 64px;
+  background: ${T.white};
+  @media (max-width: 768px) { padding: 110px 24px 48px; }
+`;
+
+const HeaderLabel = styled.div`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 9px; font-weight: 300;
+  letter-spacing: 0.42em; text-transform: uppercase;
+  color: ${T.light}; margin-bottom: 16px;
+`;
+
+const HeaderTitle = styled.h1`
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 200; letter-spacing: 0.18em;
+  text-transform: uppercase; color: ${T.black};
+  margin: 0 0 20px;
+`;
+
+const HeaderTagline = styled.p`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px; font-weight: 300;
+  line-height: 2; color: ${T.mid};
+  max-width: 520px; margin: 0;
+`;
+
+/* 2-column editorial grid */
+const GridWrap = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 12px 80px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 20px;
-  background: linear-gradient(135deg, #f0f8ff 0%, #dceefb 100%);
-  min-height: 100vh;
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 8px; padding: 0 8px 60px;
+  }
+`;
+
+const Column = styled.div`
+  display: flex; flex-direction: column; gap: 12px;
+  @media (max-width: 768px) { gap: 8px; }
+`;
+
+const PhotoItem = styled.div`
+  position: relative; overflow: hidden; cursor: pointer;
+  background: #e8e3dc;
 
   img {
-    -webkit-user-drag: none;
+    width: 100%; height: auto;
+    display: block;
+    transition: transform 0.6s ease;
     user-select: none;
-    pointer-events: none;
-  }
-`;
-
-const LoadingSpinner = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 400px;
-
-  .spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #007bff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+    -webkit-user-drag: none;
   }
 
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  p { margin-top: 20px; font-size: 18px; color: #666; }
-`;
-
-const EmptyGallery = styled.div`
-  text-align: center;
-  padding: 80px 20px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 15px;
-  margin: 20px 0;
-
-  h2 { color: #333; font-size: 2rem; margin-bottom: 10px; }
-  p { color: #666; font-size: 18px; margin-bottom: 30px; }
-  .icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.5; }
-`;
-
-const GalleryStats = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 15px 25px;
-  border-radius: 10px;
-  margin: 20px 0;
-  font-size: 14px;
-  color: #666;
-  flex-wrap: wrap;
-  gap: 10px;
-
-  .stats-left { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-  .stat { display: flex; align-items: center; gap: 8px; }
-  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-left: auto; }
-
-  button {
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
+  .overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0);
     transition: background 0.3s;
-    &:disabled { background: #ccc !important; cursor: not-allowed; }
   }
 
-  .refresh-btn       { background: #4a9fd4; &:hover:not(:disabled) { background: #2e86c1; } }
-  .signout-btn       { background: #7ab8d9; &:hover:not(:disabled) { background: #4a9fd4; } }
-  .select-photos-btn { background: #4a9fd4; &:hover:not(:disabled) { background: #2e86c1; } }
-  .select-all-btn    { background: #4a9fd4; &:hover:not(:disabled) { background: #2e86c1; } }
-  .bulk-download-btn { background: #2e86c1; &:hover:not(:disabled) { background: #1a6a9f; } }
-  .done-btn          { background: #7ab8d9; &:hover:not(:disabled) { background: #4a9fd4; } }
+  &:hover img { transform: scale(1.03); }
+  &:hover .overlay { background: rgba(0,0,0,0.08); }
 `;
 
-const SelectionBanner = styled.div`
-  background: #ddeeff;
-  border: 1px solid #90b8f0;
-  border-radius: 10px;
-  padding: 10px 20px;
-  margin-bottom: 10px;
-  font-size: 14px;
-  color: #0d3d99;
-  text-align: center;
+/* Load more */
+const LoadMoreWrap = styled.div`
+  text-align: center; padding: 0 0 80px;
 `;
 
-const GalleryWrapper = styled.div`
-  background: white;
-  padding: 20px;
-  border-radius: 15px 15px 0 0;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  margin: 20px 0 0;
-
-  .image-gallery { border-radius: 10px; overflow: hidden; }
+const LoadMoreBtn = styled.button`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 9px; font-weight: 300;
+  letter-spacing: 0.32em; text-transform: uppercase;
+  background: none; border: 1px solid ${T.border};
+  color: ${T.mid}; padding: 16px 56px; cursor: pointer;
+  transition: all 0.25s;
+  &:hover { background: ${T.black}; border-color: ${T.black}; color: ${T.white}; }
 `;
 
-const ThumbnailStrip = styled.div`
-  background: white;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  padding: 10px 0 14px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+/* Lightbox */
+const fadeIn = keyframes`from { opacity: 0; } to { opacity: 1; }`;
 
-  .thumb-nav {
-    flex-shrink: 0;
-    background: none;
-    border: none;
-    font-size: 78px;
-    line-height: 1;
-    color: #555;
-    cursor: pointer;
-    padding: 0 10px;
-    pointer-events: all;
-    &:disabled { color: #ccc; cursor: default; }
-    &:hover:not(:disabled) { color: #007bff; }
-  }
+const LightboxOverlay = styled.div`
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.93);
+  display: flex; align-items: center; justify-content: center;
+  animation: ${fadeIn} 0.2s ease;
+`;
 
-  .thumb-list {
-    display: flex;
-    flex: 1;
-    gap: 4px;
-    overflow: hidden;
-    justify-content: center;
-  }
+const LightboxInner = styled.div`
+  position: relative;
+  max-width: min(90vw, 1200px);
+  max-height: 90vh;
+  display: flex; align-items: center; justify-content: center;
 
-  .thumb-item {
-    position: relative;
-    width: 125px;
-    height: 87px;
-    flex-shrink: 0;
-    border-radius: 4px;
-    overflow: hidden;
-    cursor: pointer;
-    border: 3px solid transparent;
-    pointer-events: all;
-
-    &.active { border-color: #337ab7; }
-    &:hover:not(.active) { border-color: #aac8e8; }
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .thumb-overlay {
-      position: absolute;
-      inset: 0;
-    }
+  img {
+    max-width: 100%; max-height: 90vh;
+    object-fit: contain; display: block;
+    user-select: none; -webkit-user-drag: none;
   }
 `;
 
-const ActionButtons = styled.div`
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  z-index: 10;
-  display: flex;
-  gap: 8px;
+const LbBtn = styled.button`
+  position: fixed;
+  background: none; border: none; cursor: pointer;
+  color: rgba(255,255,255,0.7); font-size: 24px;
+  padding: 12px; transition: color 0.2s;
+  &:hover { color: #fff; }
 `;
 
-const DeleteBtn = styled.button`
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  font-size: 20px;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.15s;
-  background: rgba(180, 30, 45, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 3px 10px rgba(180, 30, 45, 0.35);
-  &:hover:not(:disabled) { background: rgba(155, 15, 30, 0.95); transform: scale(1.08); }
-  &:disabled { opacity: 0.6; cursor: not-allowed; }
+const LbClose = styled(LbBtn)`top: 24px; right: 28px; font-size: 28px;`;
+const LbPrev  = styled(LbBtn)`left: 20px; top: 50%; transform: translateY(-50%); font-size: 32px;`;
+const LbNext  = styled(LbBtn)`right: 20px; top: 50%; transform: translateY(-50%); font-size: 32px;`;
+
+const LbCounter = styled.div`
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
 `;
 
-const DownloadFab = styled.button`
-  position: absolute;
-  bottom: 18px;
-  left: 18px;
-  z-index: 10;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(74, 159, 212, 0.85);
-  color: white;
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s, transform 0.15s;
-  box-shadow: 0 3px 10px rgba(74, 159, 212, 0.4);
-  &:hover:not(:disabled) { background: rgba(46, 134, 193, 0.95); transform: scale(1.08); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Loading dots */
+const LoadingWrap = styled.div`
+  padding: 120px 0; text-align: center;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 9px; letter-spacing: 0.38em; text-transform: uppercase;
+  color: ${T.light};
 `;
 
-const ErrorMessage = styled.div`
-  background: #f8d7da;
-  color: #721c24;
-  padding: 15px;
-  border-radius: 10px;
-  margin: 20px 0;
-  text-align: center;
-`;
+/* ─── Lightbox component ──────────────────────────────── */
+const Lightbox = ({ images, index, onClose, onPrev, onNext }) => {
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft")  onPrev();
+      if (e.key === "ArrowRight") onNext();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, onPrev, onNext]);
 
-const fetchWithRetry = async (url, retries = 2) => {
-  let lastErr;
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const res = await fetch(url, { mode: "cors", cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.blob();
-    } catch (err) {
-      lastErr = err;
-      console.error(`Download attempt ${attempt + 1} failed for ${url}:`, err);
-    }
-  }
-  throw lastErr;
+  const src = images[index]?.display || images[index]?.thumbnail;
+
+  return (
+    <LightboxOverlay onClick={onClose}>
+      <LightboxInner onClick={e => e.stopPropagation()}>
+        <img src={src} alt="" />
+      </LightboxInner>
+      <LbClose onClick={onClose}>✕</LbClose>
+      {images.length > 1 && (
+        <>
+          <LbPrev onClick={onPrev}>‹</LbPrev>
+          <LbNext onClick={onNext}>›</LbNext>
+        </>
+      )}
+      <LbCounter>{index + 1} / {images.length}</LbCounter>
+    </LightboxOverlay>
+  );
 };
 
-const triggerDownload = (blob, filename) => {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-};
-
-const THUMBS_VISIBLE = 10;
-
-const Gallery = ({ onSignOut }) => {
-  const [images, setImages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [apiHealth, setApiHealth] = useState(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
+/* ─── Gallery page ────────────────────────────────────── */
+const Gallery = ({ category, onSignOut, onHome }) => {
+  const [images,     setImages]     = useState([]);
+  const [hasMore,    setHasMore]    = useState(false);
   const [nextOffset, setNextOffset] = useState(null);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedCount, setSelectedCount] = useState(0);
-  const [thumbStart, setThumbStart] = useState(0);
-  const selectedKeysRef = useRef(new Set());
-  const countTimerRef = useRef(null);
-  const galleryRef = useRef(null);
-  const [downloading, setDownloading] = useState(false);
-  const [bulkDownloading, setBulkDownloading] = useState(false);
+  const [loading,    setLoading]    = useState(true);
+  const [lightbox,   setLightbox]   = useState(null); // index | null
+  const [scrolled,   setScrolled]   = useState(false);
+  const allImages = useRef([]);
 
-  // Keep active thumbnail visible in strip when main image changes
-  useEffect(() => {
-    setThumbStart((s) => {
-      if (currentIndex < s) return currentIndex;
-      if (currentIndex >= s + THUMBS_VISIBLE) return Math.max(0, currentIndex - THUMBS_VISIBLE + 1);
-      return s;
-    });
-  }, [currentIndex]);
-
-  useEffect(() => {
-    checkApiHealth();
-    loadImages();
-    getUserGroups().then((groups) => setIsAdmin(groups.includes("Admin")));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const checkApiHealth = async () => {
-    try {
-      const health = await photoAPI.healthCheck();
-      setApiHealth(health);
-      if (!health.s3_connected)
-        setError("S3 connection failed. Please check your AWS configuration.");
-    } catch {
-      setError("Cannot connect to API server. Make sure the backend is running.");
-    }
+  const meta = CAT_META[category] || {
+    label: category,
+    heading: category,
+    tagline: "",
   };
 
-  const mapImages = (raw) => raw.map((img) => ({
-    original: img.display || img.original,   // carousel shows display size (~300KB)
-    downloadUrl: img.original,               // download fetches full original
-    thumbnail: img.thumbnail,
-    uploadedDate: new Date(img.last_modified).toLocaleDateString(),
-    originalWidth: 1200,
-    originalHeight: 800,
-    imageKey: img.key,
-    size: img.size,
-  }));
-
-  const loadImages = async () => {
-    setLoading(true);
-    setError(null);
+  const fetchPage = useCallback(async (offset = 0, append = false) => {
     try {
-      const response = await photoAPI.getImages();
-      setImages(mapImages(response.images));
-      setHasMore(response.has_more);
-      setNextOffset(response.next_token);
-      setCurrentIndex(0);
-      setThumbStart(0);
-      selectedKeysRef.current = new Set();
-      setSelectedCount(0);
+      const res = category
+        ? await photoAPI.getCategoryImages(category, offset)
+        : await photoAPI.getImages(offset);
+      const imgs = res.images || [];
+      if (append) {
+        allImages.current = [...allImages.current, ...imgs];
+      } else {
+        allImages.current = imgs;
+      }
+      setImages([...allImages.current]);
+      setHasMore(res.has_more || false);
+      setNextOffset(res.next_offset ?? null);
     } catch {
-      setError("Failed to load images. Please try again.");
+      /* silently ignore */
     } finally {
       setLoading(false);
     }
-  };
+  }, [category]);
 
-  const loadMore = async () => {
-    if (nextOffset === null || loadingMore) return;
-    setLoadingMore(true);
-    setError(null);
-    try {
-      const response = await photoAPI.getImages(nextOffset);
-      setImages((prev) => [...prev, ...mapImages(response.images)]);
-      setHasMore(response.has_more);
-      setNextOffset(response.next_token);
-    } catch {
-      setError("Failed to load more images. Please try again.");
-    } finally {
-      setLoadingMore(false);
-    }
-  };
+  useEffect(() => {
+    setLoading(true);
+    setImages([]);
+    allImages.current = [];
+    fetchPage(0, false);
+  }, [fetchPage]);
 
-  const handleUpload = async (files) => {
-    if (!files || files.length === 0) return;
-    setUploading(true);
-    setError(null);
-    try {
-      const result = await photoAPI.uploadImages(files);
-      if (result.summary.successful > 0) {
-        setTimeout(() => loadImages(), 2000);
-        alert(`Successfully uploaded ${result.summary.successful} out of ${result.summary.total_files} images!`);
-      }
-      if (result.summary.failed > 0)
-        alert(`Warning: ${result.summary.failed} images failed to upload.`);
-    } catch {
-      setError("Upload failed. Please try again.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    const image = images[currentIndex];
-    if (!window.confirm("Delete this photo?")) return;
-    try {
-      await photoAPI.deleteImage(image.imageKey);
-      setImages((prev) => prev.filter((_, i) => i !== currentIndex));
-      setCurrentIndex((prev) => Math.max(0, prev - 1));
-      selectedKeysRef.current.delete(image.imageKey);
-      setSelectedCount(selectedKeysRef.current.size);
-    } catch {
-      setError("Failed to delete image. Please try again.");
-    }
-  };
-
-  const handleDownload = async () => {
-    const image = images[currentIndex];
-    setDownloading(true);
-    setError(null);
-    try {
-      const blob = await fetchWithRetry(image.downloadUrl);
-      triggerDownload(blob, image.imageKey.split("/").pop());
-    } catch (err) {
-      console.error("Single download failed:", err);
-      setError("Download failed after 2 retries. Please try again.");
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  const handleBulkDownload = async () => {
-    if (selectedKeysRef.current.size === 0) return;
-    setBulkDownloading(true);
-    setError(null);
-    try {
-      const zip = new JSZip();
-      const selected = images.filter((img) => selectedKeysRef.current.has(img.imageKey));
-      const results = await Promise.allSettled(
-        selected.map(async (img) => {
-          const blob = await fetchWithRetry(img.downloadUrl);
-          zip.file(img.imageKey.split("/").pop(), blob);
-        })
-      );
-      const failed = results.filter((r) => r.status === "rejected").length;
-
-      if (failed === selected.length) {
-        setError("All downloads failed. Check the browser console for details.");
-        return;
-      }
-
-      if (failed > 0) setError(`${failed} image(s) failed and were skipped.`);
-
-      const fileCount = Object.keys(zip.files).length;
-      if (fileCount === 0) {
-        setError("Nothing to download — all images failed.");
-        return;
-      }
-
-      const content = await zip.generateAsync({ type: "blob" });
-      triggerDownload(content, "photos.zip");
-      selectedKeysRef.current = new Set();
-      setSelectedCount(0);
-      setSelectionMode(false);
-    } catch {
-      setError("Bulk download failed. Please try again.");
-    } finally {
-      setBulkDownloading(false);
-    }
-  };
-
-  // Instant DOM update — zero React involvement on each tap
-  const toggleSelect = useCallback((imageKey, overlayEl) => {
-    const next = new Set(selectedKeysRef.current);
-    if (next.has(imageKey)) {
-      next.delete(imageKey);
-      overlayEl.style.background = "transparent";
-    } else {
-      next.add(imageKey);
-      overlayEl.style.background = "rgba(40, 167, 69, 0.4)";
-    }
-    selectedKeysRef.current = next;
-    clearTimeout(countTimerRef.current);
-    countTimerRef.current = setTimeout(() => setSelectedCount(next.size), 50);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const toggleSelectAll = () => {
-    const allSelected = selectedKeysRef.current.size === images.length;
-    const next = allSelected ? new Set() : new Set(images.map((img) => img.imageKey));
-    selectedKeysRef.current = next;
-    const bg = allSelected ? "transparent" : "rgba(26, 86, 196, 0.45)";
-    document.querySelectorAll(".thumb-overlay").forEach((el) => { el.style.background = bg; });
-    setSelectedCount(next.size);
-  };
+  const openLightbox = (idx) => setLightbox(idx);
+  const closeLightbox = useCallback(() => setLightbox(null), []);
+  const prevLightbox  = useCallback(() => setLightbox(i => (i - 1 + allImages.current.length) % allImages.current.length), []);
+  const nextLightbox  = useCallback(() => setLightbox(i => (i + 1) % allImages.current.length), []);
 
-  const exitSelectionMode = () => {
-    clearTimeout(countTimerRef.current);
-    selectedKeysRef.current = new Set();
-    setSelectedCount(0);
-    setSelectionMode(false);
-  };
-
-  if (loading) {
-    return (
-      <GalleryContainer>
-        <Header />
-        <LoadingSpinner>
-          <div className="spinner"></div>
-          <p>Loading your beautiful photographs...</p>
-        </LoadingSpinner>
-      </GalleryContainer>
-    );
-  }
-
-  const currentImage = images[currentIndex];
-  const totalSizeMB = (images.reduce((t, img) => t + (img.size || 0), 0) / 1024 / 1024).toFixed(1);
-  const currentSizeMB = currentImage ? (currentImage.size / 1024 / 1024).toFixed(2) : null;
+  /* Split images into 2 columns */
+  const leftCol  = images.filter((_, i) => i % 2 === 0);
+  const rightCol = images.filter((_, i) => i % 2 === 1);
 
   return (
-    <GalleryContainer onContextMenu={isAdmin ? undefined : (e) => e.preventDefault()}>
-      <Header apiHealth={apiHealth} isAdmin={isAdmin} />
-      {error && <ErrorMessage>❌ {error}</ErrorMessage>}
-      {isAdmin && <UploadZone onUpload={handleUpload} uploading={uploading} />}
+    <>
+      <GlobalGallery />
 
-      <GalleryStats>
-        <div className="stats-left">
-          {isAdmin && (
-            <div className="stat">
-              📸 <strong>{images.length}</strong> photo{images.length !== 1 ? "s" : ""} loaded
-              {hasMore && <span style={{ color: "#aaa", marginLeft: 6, fontSize: 13 }}>(more available)</span>}
-            </div>
-          )}
-          {isAdmin && (
-            <div className="stat">
-              💾 Total: <strong>{totalSizeMB} MB</strong>
-              {currentSizeMB && (
-                <span style={{ marginLeft: 12, color: "#444" }}>
-                  | This image: <strong>{currentSizeMB} MB</strong>
-                </span>
-              )}
-            </div>
-          )}
-          {isAdmin && currentImage && (
-            <div className="stat" style={{ color: "#888", fontSize: 13 }}>
-              🗓 Uploaded: <strong>{currentImage.uploadedDate}</strong>
-            </div>
-          )}
-        </div>
-        <div className="btn-group">
-          {images.length > 0 && !selectionMode && (
-            <button className="select-photos-btn" onClick={() => setSelectionMode(true)}>
-              ☑ Select Photos
-            </button>
-          )}
-          {selectionMode && (
-            <>
-              <button className="select-all-btn" onClick={toggleSelectAll}>
-                {selectedCount === images.length ? "Deselect All" : "Select All"}
-              </button>
-              <button
-                className="bulk-download-btn"
-                onClick={handleBulkDownload}
-                disabled={bulkDownloading || selectedCount === 0}
-              >
-                {bulkDownloading ? "Zipping..." : `⬇ Download (${selectedCount})`}
-              </button>
-              <button className="done-btn" onClick={exitSelectionMode}>
-                ✕ Done
-              </button>
-            </>
-          )}
-          <button className="refresh-btn" onClick={loadImages} disabled={loading}>
-            🔄 Refresh
-          </button>
-          <button className="signout-btn" onClick={onSignOut}>
-            Sign Out
-          </button>
-        </div>
-      </GalleryStats>
+      {/* Nav */}
+      <Nav>
+        <NavLeft>
+          <NavBtn onClick={onHome}>← Home</NavBtn>
+        </NavLeft>
+        <NavLogo>Shivani Photography</NavLogo>
+        <NavRight>
+          <NavBtn onClick={onSignOut}>Sign Out</NavBtn>
+        </NavRight>
+      </Nav>
 
-      {selectionMode && (
-        <SelectionBanner>
-          Selection mode — tap thumbnails to select. {selectedCount > 0 ? `${selectedCount} selected.` : "None selected yet."}
-        </SelectionBanner>
-      )}
+      {/* Header */}
+      <GalleryHeader>
+        <HeaderLabel>{meta.label}</HeaderLabel>
+        <HeaderTitle>{meta.heading}</HeaderTitle>
+        {meta.tagline && <HeaderTagline>{meta.tagline}</HeaderTagline>}
+      </GalleryHeader>
 
-      {images.length === 0 ? (
-        <EmptyGallery>
-          <div className="icon">📷</div>
-          <h2>No Photos Yet</h2>
-          <p>Upload your first photos to start building your beautiful portfolio!</p>
-        </EmptyGallery>
+      {/* Grid */}
+      {loading ? (
+        <LoadingWrap>Loading</LoadingWrap>
+      ) : images.length === 0 ? (
+        <LoadingWrap>No photos yet</LoadingWrap>
       ) : (
-        <>
-          <GalleryWrapper style={{ position: "relative" }}>
-            {!selectionMode && (
-              <>
-                {isAdmin && (
-                  <ActionButtons>
-                    <DeleteBtn onClick={handleDelete} title="Delete">🗑</DeleteBtn>
-                  </ActionButtons>
-                )}
-                <DownloadFab onClick={handleDownload} disabled={downloading} title="Download">
-                  {downloading ? "…" : "↓"}
-                </DownloadFab>
-              </>
-            )}
-            <ImageGallery
-              ref={galleryRef}
-              items={images.map((img) => ({
-                ...img,
-                description: isAdmin ? `Uploaded: ${img.uploadedDate}` : undefined,
-              }))}
-              showPlayButton={false}
-              showFullscreenButton={!selectionMode}
-              showThumbnails={false}
-              slideDuration={450}
-              slideInterval={2000}
-              showIndex={true}
-              showBullets={false}
-              infinite={true}
-              lazyLoad={true}
-              additionalClass="custom-image-gallery"
-              onSlide={(index) => setCurrentIndex(index)}
-            />
-          </GalleryWrapper>
-
-          {/* Custom thumbnail carousel — fully independent of main image nav */}
-          <ThumbnailStrip>
-            <button
-              className="thumb-nav"
-              onClick={() => setThumbStart((s) => Math.max(0, s - 1))}
-              disabled={thumbStart === 0}
-            >
-              ‹
-            </button>
-            <div className="thumb-list">
-              {images.slice(thumbStart, thumbStart + THUMBS_VISIBLE).map((img, i) => {
-                const imgIdx = thumbStart + i;
-                const isSelected = selectedKeysRef.current.has(img.imageKey);
-                return (
-                  <div
-                    key={img.imageKey}
-                    className={`thumb-item${imgIdx === currentIndex ? " active" : ""}`}
-                    onClick={() => {
-                      if (!selectionMode) galleryRef.current?.slideToIndex(imgIdx);
-                    }}
-                  >
-                    <img src={img.thumbnail} alt="" draggable={false} />
-                    {selectionMode && (
-                      <div
-                        className="thumb-overlay"
-                        style={{ background: isSelected ? "rgba(26, 86, 196, 0.45)" : "transparent" }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleSelect(img.imageKey, e.currentTarget);
-                        }}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <button
-              className="thumb-nav"
-              onClick={() => setThumbStart((s) => Math.min(images.length - THUMBS_VISIBLE, s + 1))}
-              disabled={thumbStart + THUMBS_VISIBLE >= images.length}
-            >
-              ›
-            </button>
-          </ThumbnailStrip>
-        </>
+        <GridWrap>
+          <Column>
+            {leftCol.map((img, i) => (
+              <PhotoItem key={img.id} onClick={() => openLightbox(i * 2)}>
+                <img src={img.display || img.thumbnail} alt="" loading="lazy" />
+                <div className="overlay" />
+              </PhotoItem>
+            ))}
+          </Column>
+          <Column>
+            {rightCol.map((img, i) => (
+              <PhotoItem key={img.id} onClick={() => openLightbox(i * 2 + 1)}>
+                <img src={img.display || img.thumbnail} alt="" loading="lazy" />
+                <div className="overlay" />
+              </PhotoItem>
+            ))}
+          </Column>
+        </GridWrap>
       )}
 
       {hasMore && (
-        <div style={{ textAlign: "center", margin: "16px 0 8px" }}>
-          <button
-            onClick={loadMore}
-            disabled={loadingMore}
-            style={{
-              background: loadingMore ? "#ccc" : "#4a9fd4",
-              color: "white",
-              border: "none",
-              padding: "10px 28px",
-              borderRadius: 6,
-              fontSize: 15,
-              cursor: loadingMore ? "not-allowed" : "pointer",
-            }}
-          >
-            {loadingMore ? "Loading..." : "Load more"}
-          </button>
-        </div>
+        <LoadMoreWrap>
+          <LoadMoreBtn onClick={() => fetchPage(nextOffset, true)}>
+            Load more
+          </LoadMoreBtn>
+        </LoadMoreWrap>
       )}
-    </GalleryContainer>
+
+      {lightbox !== null && (
+        <Lightbox
+          images={allImages.current}
+          index={lightbox}
+          onClose={closeLightbox}
+          onPrev={prevLightbox}
+          onNext={nextLightbox}
+        />
+      )}
+    </>
   );
 };
 

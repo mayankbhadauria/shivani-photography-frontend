@@ -2,110 +2,163 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { signIn, completeNewPassword } from "../services/auth";
 
-const Container = styled.div`
+const Page = styled.div`
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #fdf8f3;
 `;
 
-const Card = styled.div`
-  background: white;
-  padding: 40px;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+/* Left — large photo panel */
+const PhotoPanel = styled.div`
+  flex: 1.4;
+  background: #d0c8be;
+  overflow: hidden;
+  display: none;
+
+  @media (min-width: 768px) { display: block; }
+
+  img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .ph {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 80px; color: #b0a898;
+  }
+`;
+
+/* Right — form panel */
+const FormPanel = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 48px;
+  background: #fff;
+  min-width: 320px;
+
+  @media (max-width: 768px) { padding: 48px 28px; }
+`;
+
+const Logo = styled.div`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #111;
+  margin-bottom: 8px;
+  text-align: center;
+`;
+
+const Tagline = styled.div`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: #a89e92;
+  margin-bottom: 52px;
+  text-align: center;
+`;
+
+const Form = styled.form`
   width: 100%;
-  max-width: 400px;
-
-  h1 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 8px;
-    font-size: 1.8rem;
-  }
-
-  p.subtitle {
-    text-align: center;
-    color: #888;
-    margin-bottom: 30px;
-    font-size: 14px;
-  }
+  max-width: 300px;
 `;
 
 const Field = styled.div`
-  margin-bottom: 20px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid ${props => props.focused ? "#111" : "#e0d8d0"};
+  padding-bottom: 8px;
+  transition: border-color 0.2s;
 
   label {
     display: block;
-    font-size: 14px;
-    color: #555;
-    margin-bottom: 6px;
-    font-weight: 500;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #a89e92;
+    margin-bottom: 8px;
   }
 
   input {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 15px;
-    box-sizing: border-box;
-    transition: border-color 0.2s;
-
-    &:focus {
-      outline: none;
-      border-color: #007bff;
-    }
+    background: none;
+    border: none;
+    outline: none;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    color: #111;
+    padding: 4px 0;
+    letter-spacing: 0.02em;
   }
 `;
 
-const Button = styled.button`
+const SubmitBtn = styled.button`
   width: 100%;
-  padding: 13px;
-  background: #007bff;
-  color: white;
+  background: #111;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  padding: 16px;
   cursor: pointer;
-  transition: background 0.2s;
-
-  &:hover:not(:disabled) {
-    background: #0056b3;
-  }
-
-  &:disabled {
-    background: #aaa;
-    cursor: not-allowed;
-  }
+  margin-top: 12px;
+  transition: background 0.25s;
+  &:hover:not(:disabled) { background: #333; }
+  &:disabled { background: #aaa; cursor: not-allowed; }
 `;
 
 const ErrorMsg = styled.div`
-  background: #f8d7da;
-  color: #721c24;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  color: #c0392b;
   text-align: center;
+  margin-bottom: 20px;
+  letter-spacing: 0.04em;
 `;
 
+/* Focusable field wrapper */
+const FocusField = ({ label, type, value, onChange, placeholder }) => {
+  const [focused, setFocused] = useState(false);
+  return (
+    <Field focused={focused}>
+      <label>{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        required
+      />
+    </Field>
+  );
+};
+
 const LoginPage = ({ onLogin }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const [email,           setEmail]           = useState("");
+  const [password,        setPassword]        = useState("");
+  const [newPassword,     setNewPassword]     = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [pendingUser, setPendingUser] = useState(null); // for new password challenge
+  const [error,           setError]           = useState("");
+  const [loading,         setLoading]         = useState(false);
+  const [pendingUser,     setPendingUser]     = useState(null);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
       const session = await signIn(email, password);
       onLogin(session);
@@ -123,16 +176,8 @@ const LoginPage = ({ onLogin }) => {
   const handleNewPassword = async (e) => {
     e.preventDefault();
     setError("");
-
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-    if (newPassword.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-
+    if (newPassword !== confirmPassword) { setError("Passwords do not match."); return; }
+    if (newPassword.length < 8) { setError("Password must be at least 8 characters."); return; }
     setLoading(true);
     try {
       const session = await completeNewPassword(pendingUser, newPassword);
@@ -146,75 +191,44 @@ const LoginPage = ({ onLogin }) => {
 
   if (pendingUser) {
     return (
-      <Container>
-        <Card>
-          <h1>Set New Password</h1>
-          <p className="subtitle">You must set a new password to continue.</p>
+      <Page>
+        <PhotoPanel><div className="ph">▣</div></PhotoPanel>
+        <FormPanel>
+          <Logo>Shivani Photography</Logo>
+          <Tagline>Set New Password</Tagline>
           {error && <ErrorMsg>{error}</ErrorMsg>}
-          <form onSubmit={handleNewPassword}>
-            <Field>
-              <label>New Password</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Min 8 chars, upper, lower, number"
-                required
-              />
-            </Field>
-            <Field>
-              <label>Confirm Password</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repeat new password"
-                required
-              />
-            </Field>
-            <Button type="submit" disabled={loading}>
+          <Form onSubmit={handleNewPassword}>
+            <FocusField label="New Password" type="password" value={newPassword}
+              onChange={e => setNewPassword(e.target.value)} placeholder="Min 8 characters" />
+            <FocusField label="Confirm Password" type="password" value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat password" />
+            <SubmitBtn type="submit" disabled={loading}>
               {loading ? "Setting..." : "Set Password"}
-            </Button>
-          </form>
-        </Card>
-      </Container>
+            </SubmitBtn>
+          </Form>
+        </FormPanel>
+      </Page>
     );
   }
 
   return (
-    <Container>
-      <Card>
-        <h1>Shivyank</h1>
-        <p className="subtitle">Photography Portfolio</p>
+    <Page>
+      <PhotoPanel><div className="ph">▣</div></PhotoPanel>
+      <FormPanel>
+        <Logo>Shivani Photography</Logo>
+        <Tagline>Portfolio</Tagline>
         {error && <ErrorMsg>{error}</ErrorMsg>}
-        <form onSubmit={handleLogin}>
-          <Field>
-            <label>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
-              autoFocus
-            />
-          </Field>
-          <Field>
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              required
-            />
-          </Field>
-          <Button type="submit" disabled={loading}>
+        <Form onSubmit={handleLogin}>
+          <FocusField label="Email" type="email" value={email}
+            onChange={e => setEmail(e.target.value)} placeholder="your@email.com" />
+          <FocusField label="Password" type="password" value={password}
+            onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
+          <SubmitBtn type="submit" disabled={loading}>
             {loading ? "Signing in..." : "Sign In"}
-          </Button>
-        </form>
-      </Card>
-    </Container>
+          </SubmitBtn>
+        </Form>
+      </FormPanel>
+    </Page>
   );
 };
 

@@ -1,23 +1,29 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Gallery from './components/gallery';
+import HomePage from './components/HomePage';
+import AdminPage from './components/AdminPage';
 import LoginPage from './components/LoginPage';
-import { getCurrentSession, signOut } from './services/auth';
+import { getCurrentSession, signOut, getUserGroups } from './services/auth';
 import './App.css';
 
 const INACTIVITY_MS = 10 * 60 * 1000; // 10 minutes
 
 function App() {
-  const [session, setSession] = useState(null);
-  const [checking, setChecking] = useState(true);
+  const [session,   setSession]   = useState(null);
+  const [checking,  setChecking]  = useState(true);
+  const [view,      setView]      = useState('home');      // 'home' | 'gallery' | 'admin'
+  const [category,  setCategory]  = useState(null);       // active gallery category
+  const [isAdmin,   setIsAdmin]   = useState(false);
   const inactivityTimer = useRef(null);
 
   const handleSignOut = useCallback(() => {
     signOut();
     setSession(null);
+    setView('home');
+    setCategory(null);
     if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
   }, []);
 
-  // Reset inactivity timer on user activity
   const resetTimer = useCallback(() => {
     if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
     inactivityTimer.current = setTimeout(handleSignOut, INACTIVITY_MS);
@@ -25,12 +31,15 @@ function App() {
 
   useEffect(() => {
     getCurrentSession()
-      .then(setSession)
+      .then(sess => {
+        setSession(sess);
+        getUserGroups().then(groups => setIsAdmin(groups.includes('Admin')));
+      })
       .catch(() => setSession(null))
       .finally(() => setChecking(false));
   }, []);
 
-  // Start inactivity timer when session is active
+  // Inactivity timer
   useEffect(() => {
     if (!session) return;
     const events = ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'];
@@ -42,7 +51,7 @@ function App() {
     };
   }, [session, resetTimer]);
 
-  // Listen for 401 from API interceptor
+  // 401 → sign out
   useEffect(() => {
     const handler = () => handleSignOut();
     window.addEventListener('auth:expired', handler);
@@ -50,15 +59,34 @@ function App() {
   }, [handleSignOut]);
 
   if (checking) return null;
+  if (!session)  return <LoginPage onLogin={setSession} />;
 
-  if (!session) {
-    return <LoginPage onLogin={setSession} />;
+  if (view === 'admin' && isAdmin) {
+    return (
+      <AdminPage
+        onHome={() => setView('home')}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
+  if (view === 'gallery') {
+    return (
+      <Gallery
+        category={category}
+        onSignOut={handleSignOut}
+        onHome={() => { setView('home'); setCategory(null); }}
+      />
+    );
   }
 
   return (
-    <div className="App">
-      <Gallery onSignOut={handleSignOut} session={session} />
-    </div>
+    <HomePage
+      onSignOut={handleSignOut}
+      onViewGallery={(cat) => { setCategory(cat || null); setView('gallery'); }}
+      onAdmin={() => setView('admin')}
+      isAdmin={isAdmin}
+    />
   );
 }
 

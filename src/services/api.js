@@ -7,21 +7,21 @@ class PhotoAPI {
   constructor() {
     this.client = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 30000, // 30 seconds for large uploads
+      timeout: 30000,
     });
 
-    // Attach JWT token to every request
+    // Attach JWT to every request
     this.client.interceptors.request.use(async (config) => {
       try {
         const token = await getIdToken();
         config.headers.Authorization = `Bearer ${token}`;
       } catch {
-        // No session — request will fail with 401 from backend
+        // No session — request will fail with 401
       }
       return config;
     });
 
-    // On 401, dispatch event so App.js can redirect to login
+    // 401 → dispatch event so App.js signs out
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
@@ -33,84 +33,133 @@ class PhotoAPI {
     );
   }
 
-  // Health check
+  // ── Health ──────────────────────────────────────────────────────────
   async healthCheck() {
-    try {
-      const response = await this.client.get("/api/health");
-      return response.data;
-    } catch (error) {
-      console.error("Health check failed:", error);
-      throw error;
-    }
+    const response = await this.client.get("/api/health");
+    return response.data;
   }
 
-  // Get a page of images (limit=10 by default)
+  // ── Highlights (hero / about / contact images) ──────────────────────
+  async getHighlights() {
+    const response = await this.client.get("/api/highlights");
+    return response.data;
+  }
+
+  async uploadHighlight(slot, file) {
+    // Get presigned URL
+    const { data } = await this.client.get(`/api/highlights/${slot}/presigned`);
+    // Upload directly to S3
+    await axios.put(data.url, file, { headers: { "Content-Type": "image/jpeg" } });
+    return data;
+  }
+
+  // ── Category gallery ────────────────────────────────────────────────
+  async getCategoryImages(category, offset = 0) {
+    const response = await this.client.get(`/api/gallery/${category}`, {
+      params: { limit: 10, offset },
+    });
+    return response.data;
+  }
+
+  async uploadToCategory(category, files, onProgress = null) {
+    // Step 1: get presigned URLs
+    const fileInfos = files.map((f) => ({
+      filename:     f.name,
+      content_type: f.type || "image/jpeg",
+    }));
+    const { data } = await this.client.post(
+      `/api/gallery/${category}/presigned-upload`,
+      { files: fileInfos }
+    );
+
+    // Step 2: upload directly to S3, max 3 concurrent
+    let completed = 0;
+    const CONCURRENCY = 3;
+    for (let i = 0; i < data.urls.length; i += CONCURRENCY) {
+      const batch = data.urls.slice(i, i + CONCURRENCY);
+      await Promise.all(
+        batch.map(async (urlInfo, batchIdx) => {
+          await axios.put(urlInfo.url, files[i + batchIdx], {
+            headers: { "Content-Type": urlInfo.content_type },
+          });
+          completed++;
+          if (onProgress) onProgress(Math.round((completed / data.urls.length) * 100));
+        })
+      );
+    }
+
+    // Step 3: generate thumbnails + display images
+    const uploadedKeys = data.urls.map((u) => u.key);
+    try {
+      await this.client.post(`/api/gallery/${category}/process-thumbnails`, {
+        keys: uploadedKeys,
+      });
+    } catch (e) {
+      console.warn("Thumbnail generation failed (non-fatal):", e);
+    }
+
+    return {
+      status:  "completed",
+      summary: {
+        total_files: files.length,
+        successful:  data.urls.length,
+        failed:      files.length - data.urls.length,
+      },
+    };
+  }
+
+  async deleteFromCategory(category, filename) {
+    const response = await this.client.delete(
+      `/api/gallery/${category}/${filename}`
+    );
+    return response.data;
+  }
+
+  // ── Legacy flat-list endpoints (kept for backward compat) ────────────
   async getImages(offset = 0) {
-    try {
-      const params = { limit: 10, offset };
-      const response = await this.client.get("/api/images", { params });
-      return response.data;
-    } catch (error) {
-      console.error("Failed to fetch images:", error);
-      throw error;
-    }
+    const response = await this.client.get("/api/images", {
+      params: { limit: 10, offset },
+    });
+    return response.data;
   }
 
-  // Upload multiple images directly to S3 via presigned URLs
   async uploadImages(files, onProgress = null) {
-    try {
-      // Step 1: get presigned URLs from backend
-      const fileInfos = files.map((f) => ({
-        filename: f.name,
-        content_type: f.type || "image/jpeg",
-      }));
-      const { data } = await this.client.post("/api/presigned-upload", { files: fileInfos });
+    const fileInfos = files.map((f) => ({
+      filename:     f.name,
+      content_type: f.type || "image/jpeg",
+    }));
+    const { data } = await this.client.post("/api/presigned-upload", { files: fileInfos });
 
-      // Step 2: upload each file directly to S3, max 3 concurrent
-      let completed = 0;
-      const CONCURRENCY = 3;
-      const uploadBatch = async (batch, startIdx) => {
-        await Promise.all(
-          batch.map(async (urlInfo, batchIdx) => {
-            await axios.put(urlInfo.url, files[startIdx + batchIdx], {
-              headers: { "Content-Type": urlInfo.content_type },
-            });
-            completed++;
-            if (onProgress) onProgress(Math.round((completed / data.urls.length) * 100));
-          })
-        );
-      };
-      for (let i = 0; i < data.urls.length; i += CONCURRENCY) {
-        await uploadBatch(data.urls.slice(i, i + CONCURRENCY), i);
-      }
-
-      // Generate thumbnails for uploaded images
-      const uploadedKeys = data.urls.map(u => u.key);
-      try {
-        await this.client.post("/api/process-thumbnails", { keys: uploadedKeys });
-      } catch (e) {
-        console.warn("Thumbnail generation failed (non-fatal):", e);
-      }
-
-      return {
-        status: "completed",
-        message: `Upload completed: ${data.urls.length}/${files.length} files successful`,
-        summary: { total_files: files.length, successful: data.urls.length, failed: files.length - data.urls.length },
-      };
-    } catch (error) {
-      console.error("Upload failed:", error);
-      throw error;
+    let completed = 0;
+    const CONCURRENCY = 3;
+    for (let i = 0; i < data.urls.length; i += CONCURRENCY) {
+      await Promise.all(
+        data.urls.slice(i, i + CONCURRENCY).map(async (urlInfo, batchIdx) => {
+          await axios.put(urlInfo.url, files[i + batchIdx], {
+            headers: { "Content-Type": urlInfo.content_type },
+          });
+          completed++;
+          if (onProgress) onProgress(Math.round((completed / data.urls.length) * 100));
+        })
+      );
     }
+
+    const uploadedKeys = data.urls.map((u) => u.key);
+    try {
+      await this.client.post("/api/process-thumbnails", { keys: uploadedKeys });
+    } catch (e) {
+      console.warn("Thumbnail generation failed (non-fatal):", e);
+    }
+
+    return {
+      status:  "completed",
+      summary: { total_files: files.length, successful: data.urls.length, failed: files.length - data.urls.length },
+    };
   }
 
   async deleteImage(imageKey) {
-    try {
-      const response = await this.client.delete(`/api/images/${imageKey}`);
-      return response.data;
-    } catch (error) {
-      console.error("Delete failed:", error);
-      throw error;
-    }
+    const response = await this.client.delete(`/api/images/${imageKey}`);
+    return response.data;
   }
 }
 
