@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Shivani Photography — Six-blade Camera Aperture favicon -->
+
+  <!-- Dark lens barrel background -->
+  <circle cx="32" cy="32" r="32" fill="#111111"/>
+
+  <!-- Aperture mark in local space, centered at (32,32), scale 0.87 -->
+  <g transform="translate(32,32) scale(0.87)">
+
+    <!-- Outer ring (thin white) -->
+    <circle r="30" fill="none" stroke="#fdf8f3" stroke-width="1.4"/>
+
+    <!-- Outer hex — inward-bowing arcs tracing blade perimeter -->
+    <path d="M 26,0
+             Q 8.66,5    13,22.52
+             Q 0,10     -13,22.52
+             Q -8.66,5  -26,0
+             Q -8.66,-5 -13,-22.52
+             Q 0,-10     13,-22.52
+             Q 8.66,-5   26,0 Z"
+          fill="none" stroke="#fdf8f3" stroke-width="0.9" stroke-linejoin="round"/>
+
+    <!-- Six blade curves (CCW bow) -->
+    <path d="M  26,0      Q  15.5,-3    6.93, 4"  fill="none" stroke="#fdf8f3" stroke-width="1.0" stroke-linecap="round"/>
+    <path d="M  13,22.52  Q  10,  12    0,    8"  fill="none" stroke="#fdf8f3" stroke-width="1.0" stroke-linecap="round"/>
+    <path d="M -13,22.52  Q  -5,  15   -6.93, 4"  fill="none" stroke="#fdf8f3" stroke-width="1.0" stroke-linecap="round"/>
+    <path d="M -26,0      Q -15.5, 3   -6.93,-4"  fill="none" stroke="#fdf8f3" stroke-width="1.0" stroke-linecap="round"/>
+    <path d="M -13,-22.52 Q -10, -12    0,   -8"  fill="none" stroke="#fdf8f3" stroke-width="1.0" stroke-linecap="round"/>
+    <path d="M  13,-22.52 Q   5, -15    6.93,-4"  fill="none" stroke="#fdf8f3" stroke-width="1.0" stroke-linecap="round"/>
+
+    <!-- Inner aperture hex opening -->
+    <polygon points="6.93,4 0,8 -6.93,4 -6.93,-4 0,-8 6.93,-4"
+             fill="none" stroke="#fdf8f3" stroke-width="0.9" stroke-linejoin="round"/>
+
+    <!-- Centre dot -->
+    <circle r="2" fill="#fdf8f3"/>
+  </g>
+</svg>
