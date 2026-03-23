@@ -25,6 +25,7 @@ const HIGHLIGHT_SLOTS = [
   { id: "hero",    label: "Hero",    desc: "Home page full-width banner image" },
   { id: "about",   label: "About",   desc: "About section portrait photo" },
   { id: "contact", label: "Contact", desc: "Contact section photo" },
+  { id: "login",   label: "Login",   desc: "Login page left panel photo" },
 ];
 
 /* ── Styled ─────────────────────────────────────────────────────── */

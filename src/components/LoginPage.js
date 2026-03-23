@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { signIn, completeNewPassword } from "../services/auth";
+
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
 const Page = styled.div`
   min-height: 100vh;
@@ -154,6 +156,14 @@ const LoginPage = ({ onLogin }) => {
   const [error,           setError]           = useState("");
   const [loading,         setLoading]         = useState(false);
   const [pendingUser,     setPendingUser]     = useState(null);
+  const [loginBg,         setLoginBg]         = useState(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/login-bg`)
+      .then(r => r.json())
+      .then(d => { if (d.url) setLoginBg(d.url); })
+      .catch(() => {});
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -192,7 +202,9 @@ const LoginPage = ({ onLogin }) => {
   if (pendingUser) {
     return (
       <Page>
-        <PhotoPanel><div className="ph">▣</div></PhotoPanel>
+        <PhotoPanel>
+        {loginBg ? <img src={loginBg} alt="" /> : <div className="ph">▣</div>}
+      </PhotoPanel>
         <FormPanel>
           <Logo>Shivani Photography</Logo>
           <Tagline>Set New Password</Tagline>
@@ -213,7 +225,9 @@ const LoginPage = ({ onLogin }) => {
 
   return (
     <Page>
-      <PhotoPanel><div className="ph">▣</div></PhotoPanel>
+      <PhotoPanel>
+        {loginBg ? <img src={loginBg} alt="" /> : <div className="ph">▣</div>}
+      </PhotoPanel>
       <FormPanel>
         <Logo>Shivani Photography</Logo>
         <Tagline>Portfolio</Tagline>
