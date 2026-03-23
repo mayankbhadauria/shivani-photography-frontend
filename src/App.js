@@ -3,16 +3,20 @@ import Gallery from './components/gallery';
 import HomePage from './components/HomePage';
 import AdminPage from './components/AdminPage';
 import LoginPage from './components/LoginPage';
+import AboutMePage from './components/AboutMePage';
+import ReservationPage from './components/ReservationPage';
+import ContactPage from './components/ContactPage';
+import InfoPage from './components/InfoPage';
 import { getCurrentSession, signOut, getUserGroups } from './services/auth';
 import './App.css';
 
-const INACTIVITY_MS = 10 * 60 * 1000; // 10 minutes
+const INACTIVITY_MS = 10 * 60 * 1000;
 
 function App() {
   const [session,   setSession]   = useState(null);
   const [checking,  setChecking]  = useState(true);
-  const [view,      setView]      = useState('home');      // 'home' | 'gallery' | 'admin'
-  const [category,  setCategory]  = useState(null);       // active gallery category
+  const [view,      setView]      = useState('home');
+  const [category,  setCategory]  = useState(null);
   const [isAdmin,   setIsAdmin]   = useState(false);
   const inactivityTimer = useRef(null);
 
@@ -39,7 +43,6 @@ function App() {
       .finally(() => setChecking(false));
   }, []);
 
-  // Inactivity timer
   useEffect(() => {
     if (!session) return;
     const events = ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'];
@@ -51,7 +54,6 @@ function App() {
     };
   }, [session, resetTimer]);
 
-  // 401 → sign out
   useEffect(() => {
     const handler = () => handleSignOut();
     window.addEventListener('auth:expired', handler);
@@ -61,13 +63,20 @@ function App() {
   if (checking) return null;
   if (!session)  return <LoginPage onLogin={setSession} />;
 
+  // Shared navigation object passed to every page
+  const nav = {
+    onHome:        () => { setView('home'); setCategory(null); },
+    onAbout:       () => setView('about'),
+    onInfo:        () => setView('info'),
+    onReservation: () => setView('reservation'),
+    onContact:     () => setView('contact'),
+    onViewGallery: (cat) => { setCategory(cat || null); setView('gallery'); },
+    onAdmin:       () => setView('admin'),
+    onSignOut:     handleSignOut,
+  };
+
   if (view === 'admin' && isAdmin) {
-    return (
-      <AdminPage
-        onHome={() => setView('home')}
-        onSignOut={handleSignOut}
-      />
-    );
+    return <AdminPage onHome={nav.onHome} onSignOut={handleSignOut} />;
   }
 
   if (view === 'gallery') {
@@ -75,16 +84,21 @@ function App() {
       <Gallery
         category={category}
         onSignOut={handleSignOut}
-        onHome={() => { setView('home'); setCategory(null); }}
+        onHome={nav.onHome}
+        {...nav}
+        isAdmin={isAdmin}
       />
     );
   }
 
+  if (view === 'about')       return <AboutMePage       {...nav} isAdmin={isAdmin} />;
+  if (view === 'reservation') return <ReservationPage   {...nav} isAdmin={isAdmin} />;
+  if (view === 'contact')     return <ContactPage       {...nav} isAdmin={isAdmin} />;
+  if (view === 'info')        return <InfoPage          {...nav} isAdmin={isAdmin} />;
+
   return (
     <HomePage
-      onSignOut={handleSignOut}
-      onViewGallery={(cat) => { setCategory(cat || null); setView('gallery'); }}
-      onAdmin={() => setView('admin')}
+      {...nav}
       isAdmin={isAdmin}
     />
   );

@@ -548,7 +548,7 @@ const ContactSection = styled(AboutSection)``;
 const ContactText = styled(AboutText)``;
 
 /* ─── Component ──────────────────────────────────────── */
-const HomePage = ({ onSignOut, onViewGallery, onAdmin, isAdmin: isAdminProp }) => {
+const HomePage = ({ onSignOut, onViewGallery, onAdmin, onAbout, onInfo, onReservation, onContact, isAdmin: isAdminProp }) => {
   const [coverImages, setCoverImages] = useState({});
   const [highlights,  setHighlights]  = useState({});
   const [isAdmin,     setIsAdmin]     = useState(isAdminProp || false);
@@ -585,6 +585,8 @@ const HomePage = ({ onSignOut, onViewGallery, onAdmin, isAdmin: isAdminProp }) =
       <Nav scrolled={scrolled}>
         <NavGroup>
           <NavLink onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Home</NavLink>
+          <NavLink onClick={onAbout}>About</NavLink>
+          <NavLink onClick={onInfo}>Info</NavLink>
           {isAdmin && <NavLink onClick={onAdmin} style={{ color: "#c9a84c" }}>Admin</NavLink>}
         </NavGroup>
 
@@ -592,6 +594,8 @@ const HomePage = ({ onSignOut, onViewGallery, onAdmin, isAdmin: isAdminProp }) =
 
         <NavRight>
           <NavLink onClick={() => onViewGallery()}>Portfolio</NavLink>
+          <NavLink onClick={onReservation}>Reservation</NavLink>
+          <NavLink onClick={onContact}>Contact</NavLink>
           <NavLink onClick={onSignOut}>Sign Out</NavLink>
         </NavRight>
       </Nav>
@@ -642,7 +646,7 @@ const HomePage = ({ onSignOut, onViewGallery, onAdmin, isAdmin: isAdminProp }) =
             A mom, nature lover, light seeker and a self-taught photographer
             obsessed to capture fleeting moments!
           </BodyText>
-          <TextLink>More About Me</TextLink>
+          <TextLink onClick={onAbout}>More About Me</TextLink>
         </AboutText>
         <FramedPhoto>
           <PhotoFrame>
@@ -659,7 +663,7 @@ const HomePage = ({ onSignOut, onViewGallery, onAdmin, isAdmin: isAdminProp }) =
         <ContactText>
           <SmallLabel>Can you picture yourself in my photos?</SmallLabel>
           <BigHeading>If you see beauty{"\n"}the way I do,{"\n"}let's work together!</BigHeading>
-          <TextLink>Contact Me</TextLink>
+          <TextLink onClick={onContact}>Contact Me</TextLink>
         </ContactText>
         <FramedPhoto>
           <PhotoFrame>
@@ -675,15 +679,15 @@ const HomePage = ({ onSignOut, onViewGallery, onAdmin, isAdmin: isAdminProp }) =
       <FooterLinksSection>
         <FooterLinkCol>
           <FooterLinkLabel>Meet Shivani</FooterLinkLabel>
-          <FooterLinkHeading onClick={() => document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' })}>About</FooterLinkHeading>
+          <FooterLinkHeading onClick={onAbout}>About</FooterLinkHeading>
         </FooterLinkCol>
         <FooterLinkCol>
           <FooterLinkLabel>View Packages</FooterLinkLabel>
-          <FooterLinkHeading onClick={() => onViewGallery()}>Session Info</FooterLinkHeading>
+          <FooterLinkHeading onClick={onReservation}>Session Info</FooterLinkHeading>
         </FooterLinkCol>
         <FooterLinkCol>
           <FooterLinkLabel>Book Your Date</FooterLinkLabel>
-          <FooterLinkHeading onClick={() => document.getElementById('contact-section')?.scrollIntoView({ behavior: 'smooth' })}>Contact Me</FooterLinkHeading>
+          <FooterLinkHeading onClick={onContact}>Contact Me</FooterLinkHeading>
         </FooterLinkCol>
       </FooterLinksSection>
 
@@ -706,9 +710,10 @@ const HomePage = ({ onSignOut, onViewGallery, onAdmin, isAdmin: isAdminProp }) =
         <FooterBottomRow1>
           <FooterBottomNav>
             <FooterBottomLink onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</FooterBottomLink>
-            <FooterBottomLink onClick={() => document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' })}>About</FooterBottomLink>
+            <FooterBottomLink onClick={onAbout}>About</FooterBottomLink>
+            <FooterBottomLink onClick={onInfo}>Info</FooterBottomLink>
             <FooterBottomLink onClick={() => onViewGallery()}>Portfolio</FooterBottomLink>
-            <FooterBottomLink onClick={() => document.getElementById('contact-section')?.scrollIntoView({ behavior: 'smooth' })}>Reservation</FooterBottomLink>
+            <FooterBottomLink onClick={onReservation}>Reservation</FooterBottomLink>
           </FooterBottomNav>
           <FooterTopBtn onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} title="Back to top">↑</FooterTopBtn>
         </FooterBottomRow1>
