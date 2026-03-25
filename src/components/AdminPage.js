@@ -16,9 +16,10 @@ const T = {
 
 const CATEGORIES = [
   { id: "maternity",        label: "Maternity" },
-  { id: "family-kids",      label: "Family & Kids" },
-  { id: "brand-shoot",      label: "Brand Shoot" },
-  { id: "creative-portrait",label: "Creative Portrait" },
+  { id: "newborn",          label: "Newborn" },
+  { id: "family-portraits", label: "Family Portraits" },
+  { id: "brands",           label: "Brands" },
+  { id: "events",           label: "Events" },
 ];
 
 const HIGHLIGHT_SLOTS = [

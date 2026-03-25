@@ -15,24 +15,24 @@ const T = {
 /* ─── Category meta ───────────────────────────────────── */
 const CAT_META = {
   "maternity": {
-    label:    "Maternity",
-    heading:  "Capturing Motherhood",
-    tagline:  "Every curve, every glow — the magic of new life beautifully told.",
+    label:   "Maternity",
+    heading: "Capturing Motherhood",
+    tagline: "Every curve, every glow — the magic of new life beautifully told.",
   },
-  "family-kids": {
-    label:    "Family & Kids",
-    heading:  "Family Stories",
-    tagline:  "Genuine laughter, little hands, real moments that last a lifetime.",
+  "newborn": {
+    label:   "Newborn",
+    heading: "New Beginnings",
+    tagline: "Those tiny fingers, fleeting moments — captured forever in their first days.",
   },
-  "creative-portrait": {
-    label:    "Creative Portrait",
-    heading:  "Creative Portraits",
-    tagline:  "Your story, your light — portraits that feel entirely like you.",
+  "family-portraits": {
+    label:   "Family Portraits",
+    heading: "Family Stories",
+    tagline: "Genuine laughter, little hands, real moments that last a lifetime.",
   },
-  "brand-shoot": {
-    label:    "Brand Shoot",
-    heading:  "Brand Sessions",
-    tagline:  "Elevating your brand with images that speak before you say a word.",
+  "brands-and-events": {
+    label:   "Brands & Events",
+    heading: "Brands & Events",
+    tagline: "Elevating your brand and celebrating your milestones with images that endure.",
   },
 };
 
@@ -244,27 +244,69 @@ const Lightbox = ({ images, index, onClose, onPrev, onNext }) => {
   );
 };
 
+/* ─── Helpers ─────────────────────────────────────────── */
+const SectionDivider = styled.div`
+  padding: 56px 80px 32px;
+  @media (max-width: 768px) { padding: 40px 24px 20px; }
+`;
+const SectionLabel = styled.h2`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 9px; font-weight: 300;
+  letter-spacing: 0.46em; text-transform: uppercase;
+  color: ${T.light}; margin: 0 0 4px;
+`;
+const SectionTitle = styled.h3`
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  font-weight: 200; letter-spacing: 0.18em;
+  text-transform: uppercase; color: ${T.black};
+  margin: 0;
+`;
+
+function MasonryGrid({ images, offset, onOpen }) {
+  const left  = images.filter((_, i) => i % 2 === 0);
+  const right = images.filter((_, i) => i % 2 === 1);
+  return (
+    <GridWrap>
+      <Column>
+        {left.map((img, i) => (
+          <PhotoItem key={img.id} onClick={() => onOpen(offset + i * 2)}>
+            <img src={img.display || img.thumbnail} alt="" loading="lazy" />
+            <div className="overlay" />
+          </PhotoItem>
+        ))}
+      </Column>
+      <Column>
+        {right.map((img, i) => (
+          <PhotoItem key={img.id} onClick={() => onOpen(offset + i * 2 + 1)}>
+            <img src={img.display || img.thumbnail} alt="" loading="lazy" />
+            <div className="overlay" />
+          </PhotoItem>
+        ))}
+      </Column>
+    </GridWrap>
+  );
+}
+
 /* ─── Gallery page ────────────────────────────────────── */
-const Gallery = ({ category, onSignOut, onHome }) => {
+const Gallery = ({ category, onSignOut, onHome, onPortfolio }) => {
   const [images,     setImages]     = useState([]);
   const [hasMore,    setHasMore]    = useState(false);
   const [nextOffset, setNextOffset] = useState(null);
   const [loading,    setLoading]    = useState(true);
-  const [lightbox,   setLightbox]   = useState(null); // index | null
-  const [scrolled,   setScrolled]   = useState(false);
+  const [lightbox,   setLightbox]   = useState(null);
+  // brands-and-events specific
+  const [brandsImgs, setBrandsImgs] = useState([]);
+  const [eventsImgs, setEventsImgs] = useState([]);
   const allImages = useRef([]);
 
-  const meta = CAT_META[category] || {
-    label: category,
-    heading: category,
-    tagline: "",
-  };
+  const isCombined = category === "brands-and-events";
+
+  const meta = CAT_META[category] || { label: category, heading: category, tagline: "" };
 
   const fetchPage = useCallback(async (offset = 0, append = false) => {
     try {
-      const res = category
-        ? await photoAPI.getCategoryImages(category, offset)
-        : await photoAPI.getImages(offset);
+      const res = await photoAPI.getCategoryImages(category, offset);
       const imgs = res.images || [];
       if (append) {
         allImages.current = [...allImages.current, ...imgs];
@@ -274,43 +316,45 @@ const Gallery = ({ category, onSignOut, onHome }) => {
       setImages([...allImages.current]);
       setHasMore(res.has_more || false);
       setNextOffset(res.next_offset ?? null);
-    } catch {
-      /* silently ignore */
-    } finally {
+    } catch { /* ignore */ } finally {
       setLoading(false);
     }
   }, [category]);
+
+  const fetchCombined = useCallback(async () => {
+    try {
+      const res = await photoAPI.getBrandsAndEvents();
+      const brands = res.brands || [];
+      const events = res.events || [];
+      setBrandsImgs(brands);
+      setEventsImgs(events);
+      allImages.current = [...brands, ...events];
+      setImages([...allImages.current]);
+    } catch { /* ignore */ } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     setLoading(true);
     setImages([]);
     allImages.current = [];
-    fetchPage(0, false);
-  }, [fetchPage]);
+    if (isCombined) fetchCombined();
+    else fetchPage(0, false);
+  }, [isCombined, fetchCombined, fetchPage]);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const openLightbox = (idx) => setLightbox(idx);
+  const openLightbox  = useCallback((idx) => setLightbox(idx), []);
   const closeLightbox = useCallback(() => setLightbox(null), []);
   const prevLightbox  = useCallback(() => setLightbox(i => (i - 1 + allImages.current.length) % allImages.current.length), []);
   const nextLightbox  = useCallback(() => setLightbox(i => (i + 1) % allImages.current.length), []);
-
-  /* Split images into 2 columns */
-  const leftCol  = images.filter((_, i) => i % 2 === 0);
-  const rightCol = images.filter((_, i) => i % 2 === 1);
 
   return (
     <>
       <GlobalGallery />
 
-      {/* Nav */}
       <Nav>
         <NavLeft>
-          <NavBtn onClick={onHome}>← Home</NavBtn>
+          <NavBtn onClick={onPortfolio || onHome}>← Portfolio</NavBtn>
         </NavLeft>
         <NavLogo>Shivani Photography</NavLogo>
         <NavRight>
@@ -318,45 +362,46 @@ const Gallery = ({ category, onSignOut, onHome }) => {
         </NavRight>
       </Nav>
 
-      {/* Header */}
       <GalleryHeader>
         <HeaderLabel>{meta.label}</HeaderLabel>
         <HeaderTitle>{meta.heading}</HeaderTitle>
         {meta.tagline && <HeaderTagline>{meta.tagline}</HeaderTagline>}
       </GalleryHeader>
 
-      {/* Grid */}
       {loading ? (
         <LoadingWrap>Loading</LoadingWrap>
+      ) : isCombined ? (
+        /* ── Brands & Events two-section layout ── */
+        <>
+          <SectionDivider>
+            <SectionLabel>Section 01</SectionLabel>
+            <SectionTitle>Brands</SectionTitle>
+          </SectionDivider>
+          {brandsImgs.length === 0
+            ? <LoadingWrap>No brand photos yet</LoadingWrap>
+            : <MasonryGrid images={brandsImgs} offset={0} onOpen={openLightbox} />
+          }
+
+          <SectionDivider>
+            <SectionLabel>Section 02</SectionLabel>
+            <SectionTitle>Events</SectionTitle>
+          </SectionDivider>
+          {eventsImgs.length === 0
+            ? <LoadingWrap>No event photos yet</LoadingWrap>
+            : <MasonryGrid images={eventsImgs} offset={brandsImgs.length} onOpen={openLightbox} />
+          }
+        </>
       ) : images.length === 0 ? (
         <LoadingWrap>No photos yet</LoadingWrap>
       ) : (
-        <GridWrap>
-          <Column>
-            {leftCol.map((img, i) => (
-              <PhotoItem key={img.id} onClick={() => openLightbox(i * 2)}>
-                <img src={img.display || img.thumbnail} alt="" loading="lazy" />
-                <div className="overlay" />
-              </PhotoItem>
-            ))}
-          </Column>
-          <Column>
-            {rightCol.map((img, i) => (
-              <PhotoItem key={img.id} onClick={() => openLightbox(i * 2 + 1)}>
-                <img src={img.display || img.thumbnail} alt="" loading="lazy" />
-                <div className="overlay" />
-              </PhotoItem>
-            ))}
-          </Column>
-        </GridWrap>
-      )}
-
-      {hasMore && (
-        <LoadMoreWrap>
-          <LoadMoreBtn onClick={() => fetchPage(nextOffset, true)}>
-            Load more
-          </LoadMoreBtn>
-        </LoadMoreWrap>
+        <>
+          <MasonryGrid images={images} offset={0} onOpen={openLightbox} />
+          {hasMore && (
+            <LoadMoreWrap>
+              <LoadMoreBtn onClick={() => fetchPage(nextOffset, true)}>Load more</LoadMoreBtn>
+            </LoadMoreWrap>
+          )}
+        </>
       )}
 
       {lightbox !== null && (

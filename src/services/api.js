@@ -108,6 +108,11 @@ class PhotoAPI {
     };
   }
 
+  async getBrandsAndEvents() {
+    const response = await this.client.get("/api/gallery/brands-and-events");
+    return response.data;
+  }
+
   async reprocessDisplayImages(category) {
     const response = await this.client.post(`/api/gallery/${category}/reprocess-display`);
     return response.data;

@@ -7,6 +7,7 @@ import AboutMePage from './components/AboutMePage';
 import ReservationPage from './components/ReservationPage';
 import ContactPage from './components/ContactPage';
 import InfoPage from './components/InfoPage';
+import PortfolioPage from './components/PortfolioPage';
 import { getCurrentSession, signOut, getUserGroups } from './services/auth';
 import './App.css';
 
@@ -70,6 +71,7 @@ function App() {
     onInfo:        () => setView('info'),
     onReservation: () => setView('reservation'),
     onContact:     () => setView('contact'),
+    onPortfolio:   () => { setView('portfolio'); setCategory(null); },
     onViewGallery: (cat) => { setCategory(cat || null); setView('gallery'); },
     onAdmin:       () => setView('admin'),
     onSignOut:     handleSignOut,
@@ -85,16 +87,18 @@ function App() {
         category={category}
         onSignOut={handleSignOut}
         onHome={nav.onHome}
+        onPortfolio={nav.onPortfolio}
         {...nav}
         isAdmin={isAdmin}
       />
     );
   }
 
-  if (view === 'about')       return <AboutMePage       {...nav} isAdmin={isAdmin} />;
-  if (view === 'reservation') return <ReservationPage   {...nav} isAdmin={isAdmin} />;
-  if (view === 'contact')     return <ContactPage       {...nav} isAdmin={isAdmin} />;
-  if (view === 'info')        return <InfoPage          {...nav} isAdmin={isAdmin} />;
+  if (view === 'portfolio')   return <PortfolioPage    {...nav} isAdmin={isAdmin} />;
+  if (view === 'about')       return <AboutMePage      {...nav} isAdmin={isAdmin} />;
+  if (view === 'reservation') return <ReservationPage  {...nav} isAdmin={isAdmin} />;
+  if (view === 'contact')     return <ContactPage      {...nav} isAdmin={isAdmin} />;
+  if (view === 'info')        return <InfoPage         {...nav} isAdmin={isAdmin} />;
 
   return (
     <HomePage

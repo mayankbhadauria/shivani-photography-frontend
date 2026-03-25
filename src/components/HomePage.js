@@ -22,9 +22,9 @@ const GlobalHome = createGlobalStyle`
 // Edit labels here freely; coverIndex = which loaded image to use as cover
 const CATEGORIES = [
   { id: "maternity",         label: "MATERNITY" },
-  { id: "family-kids",       label: "FAMILY & KIDS" },
-  { id: "creative-portrait", label: "CREATIVE PORTRAIT" },
-  { id: "brand-shoot",       label: "BRAND SHOOT" },
+  { id: "newborn",           label: "NEWBORN" },
+  { id: "family-portraits",  label: "FAMILY PORTRAITS" },
+  { id: "brands-and-events", label: "BRANDS & EVENTS" },
 ];
 
 /* ─── Styled components ──────────────────────────────── */
@@ -548,7 +548,7 @@ const ContactSection = styled(AboutSection)``;
 const ContactText = styled(AboutText)``;
 
 /* ─── Component ──────────────────────────────────────── */
-const HomePage = ({ onSignOut, onViewGallery, onAdmin, onAbout, onInfo, onReservation, onContact, isAdmin: isAdminProp }) => {
+const HomePage = ({ onSignOut, onViewGallery, onPortfolio, onAdmin, onAbout, onInfo, onReservation, onContact, isAdmin: isAdminProp }) => {
   const [coverImages, setCoverImages] = useState({});
   const [highlights,  setHighlights]  = useState({});
   const [isAdmin,     setIsAdmin]     = useState(isAdminProp || false);
@@ -593,7 +593,7 @@ const HomePage = ({ onSignOut, onViewGallery, onAdmin, onAbout, onInfo, onReserv
         <NavLogo>Shivani Photography</NavLogo>
 
         <NavRight>
-          <NavLink onClick={() => onViewGallery()}>Portfolio</NavLink>
+          <NavLink onClick={onPortfolio}>Portfolio</NavLink>
           <NavLink onClick={onReservation}>Reservation</NavLink>
           <NavLink onClick={onContact}>Contact</NavLink>
           <NavLink onClick={onSignOut}>Sign Out</NavLink>
@@ -712,7 +712,7 @@ const HomePage = ({ onSignOut, onViewGallery, onAdmin, onAbout, onInfo, onReserv
             <FooterBottomLink onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</FooterBottomLink>
             <FooterBottomLink onClick={onAbout}>About</FooterBottomLink>
             <FooterBottomLink onClick={onInfo}>Info</FooterBottomLink>
-            <FooterBottomLink onClick={() => onViewGallery()}>Portfolio</FooterBottomLink>
+            <FooterBottomLink onClick={onPortfolio}>Portfolio</FooterBottomLink>
             <FooterBottomLink onClick={onReservation}>Reservation</FooterBottomLink>
           </FooterBottomNav>
           <FooterTopBtn onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} title="Back to top">↑</FooterTopBtn>
