@@ -195,6 +195,30 @@ const LoadMore = styled.button`
   &:hover { background: ${T.black}; border-color: ${T.black}; color: ${T.white}; }
 `;
 
+const ReprocessBar = styled.div`
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid ${T.border};
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+`;
+
+const ReprocessBtn = styled.button`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 9px; font-weight: 300;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  background: ${T.black}; color: ${T.white};
+  border: none; padding: 12px 28px;
+  cursor: pointer; transition: background 0.2s;
+  &:hover { background: #333; }
+  &:disabled { background: ${T.light}; cursor: default; }
+`;
+
+const ReprocessNote = styled.span`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px; font-weight: 300;
+  letter-spacing: 0.06em; color: ${T.mid};
+`;
+
 /* Highlights */
 const HighlightGrid = styled.div`
   display: grid;
@@ -242,12 +266,13 @@ const UploadHighlightBtn = styled.label`
 
 /* ── Category tab content ────────────────────────────────────────── */
 const CategoryTab = ({ category }) => {
-  const [images,     setImages]     = useState([]);
-  const [hasMore,    setHasMore]    = useState(false);
-  const [nextOffset, setNextOffset] = useState(null);
-  const [uploading,  setUploading]  = useState(false);
-  const [progress,   setProgress]   = useState(0);
-  const [status,     setStatus]     = useState(null); // {msg, error}
+  const [images,      setImages]      = useState([]);
+  const [hasMore,     setHasMore]     = useState(false);
+  const [nextOffset,  setNextOffset]  = useState(null);
+  const [uploading,   setUploading]   = useState(false);
+  const [progress,    setProgress]    = useState(0);
+  const [status,      setStatus]      = useState(null);
+  const [reprocessing, setReprocessing] = useState(false);
 
   const loadImages = useCallback(async (offset = 0, append = false) => {
     try {
@@ -273,6 +298,20 @@ const CategoryTab = ({ category }) => {
       setUploading(false); setProgress(0);
     }
   }, [category, loadImages]);
+
+  const handleReprocess = async () => {
+    if (!window.confirm(`Regenerate all display images for ${category}? This may take a few minutes.`)) return;
+    setReprocessing(true);
+    setStatus(null);
+    try {
+      const res = await photoAPI.reprocessDisplayImages(category);
+      setStatus({ msg: `Reprocessed ${res.succeeded}/${res.processed} images at high quality` });
+    } catch {
+      setStatus({ msg: "Reprocess failed. Try again.", error: true });
+    } finally {
+      setReprocessing(false);
+    }
+  };
 
   const handleDelete = async (filename) => {
     if (!window.confirm("Delete this photo?")) return;
@@ -323,6 +362,15 @@ const CategoryTab = ({ category }) => {
       {hasMore && (
         <LoadMore onClick={() => loadImages(nextOffset, true)}>Load more</LoadMore>
       )}
+
+      <ReprocessBar>
+        <ReprocessBtn onClick={handleReprocess} disabled={reprocessing}>
+          {reprocessing ? "Reprocessing…" : "Reprocess Display Images"}
+        </ReprocessBtn>
+        <ReprocessNote>
+          Regenerates all display images at 2400×1600 quality 92 — run once per category to upgrade existing photos
+        </ReprocessNote>
+      </ReprocessBar>
     </>
   );
 };

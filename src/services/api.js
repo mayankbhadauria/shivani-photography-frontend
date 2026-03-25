@@ -108,6 +108,11 @@ class PhotoAPI {
     };
   }
 
+  async reprocessDisplayImages(category) {
+    const response = await this.client.post(`/api/gallery/${category}/reprocess-display`);
+    return response.data;
+  }
+
   async deleteFromCategory(category, filename) {
     const response = await this.client.delete(
       `/api/gallery/${category}/${filename}`

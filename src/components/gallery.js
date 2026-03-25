@@ -175,8 +175,8 @@ const LightboxOverlay = styled.div`
 
 const LightboxInner = styled.div`
   position: relative;
-  max-width: min(90vw, 1200px);
-  max-height: 90vh;
+  max-width: min(92vw, 1800px);
+  max-height: 92vh;
   display: flex; align-items: center; justify-content: center;
 
   img {
@@ -225,7 +225,7 @@ const Lightbox = ({ images, index, onClose, onPrev, onNext }) => {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, onPrev, onNext]);
 
-  const src = images[index]?.display || images[index]?.thumbnail;
+  const src = images[index]?.original || images[index]?.display || images[index]?.thumbnail;
 
   return (
     <LightboxOverlay onClick={onClose}>
