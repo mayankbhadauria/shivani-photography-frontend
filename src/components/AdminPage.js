@@ -26,8 +26,9 @@ const HIGHLIGHT_SLOTS = [
   { id: "about",             label: "About",            desc: "About section portrait photo" },
   { id: "contact",           label: "Contact",          desc: "Contact section photo" },
   { id: "login",             label: "Login",            desc: "Login page left panel photo" },
-  { id: "portrait-session",  label: "Portrait Session", desc: "Reservation page — Portrait Session card image" },
-  { id: "standard-session",  label: "Standard Session", desc: "Reservation page — Standard Session card image" },
+  { id: "portrait-session",  label: "Portrait Session",  desc: "Reservation page — Portrait Session image" },
+  { id: "standard-session",  label: "Standard Session",  desc: "Reservation page — Standard Session image" },
+  { id: "reservation-hero",  label: "Reservation Hero",  desc: "Reservation page — full-width banner image" },
 ];
 
 /* ── Styled ─────────────────────────────────────────────────────── */

@@ -5,142 +5,166 @@ import GetInTouch from "./GetInTouch";
 import { photoAPI } from "../services/api";
 
 const T = {
-  cream: "#fdf8f3", white: "#ffffff", black: "#111111",
-  mid: "#6b6155", light: "#a89e92", border: "#e8e3dc",
+  white: "#ffffff", black: "#111111",
+  mid: "#6b6155", light: "#a89e92", border: "#ddd",
 };
 
 const GlobalRes = createGlobalStyle`body { background: ${T.white}; margin: 0; }`;
-
 const Page = styled.div`min-height: 100vh; background: ${T.white};`;
 
-const Header = styled.section`
-  padding: 140px 10% 72px;
-  background: ${T.white};
-  @media (max-width: 768px) { padding: 120px 28px 56px; }
-`;
-
-const Label = styled.div`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 9px; font-weight: 300;
-  letter-spacing: 0.42em; text-transform: uppercase;
-  color: ${T.light}; margin-bottom: 20px;
-`;
-
-const PageTitle = styled.h1`
-  font-family: 'Montserrat', sans-serif;
-  font-size: clamp(2rem, 5vw, 4rem);
-  font-weight: 200; letter-spacing: 0.18em;
-  text-transform: uppercase; color: ${T.black};
-  margin: 0 0 20px;
-`;
-
-const Intro = styled.p`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 14px; font-weight: 300;
-  line-height: 2; color: ${T.mid};
-  max-width: 560px; margin: 0;
-`;
-
-const CardsSection = styled.section`
-  padding: 0 10% 100px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  max-width: 1400px;
-  margin: 0 auto;
-  @media (max-width: 900px) { grid-template-columns: 1fr; gap: 28px; }
-  @media (max-width: 768px) { padding: 0 28px 72px; }
-`;
-
-const Card = styled.div`
-  border: 1px solid ${T.border};
-  background: ${T.cream};
-  display: flex; flex-direction: column;
-  overflow: hidden;
-`;
-
-const CardImage = styled.div`
+/* ── Hero Banner ─────────────────────────────────────────────────── */
+const Hero = styled.section`
+  position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
-  background: ${T.border};
+  height: 58vh;
+  min-height: 340px;
+  background: #1a1a1a;
   overflow: hidden;
-  img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.6s ease;
-  }
-  &:hover img { transform: scale(1.03); }
 `;
 
-const CardBody = styled.div`
-  padding: 48px 48px 44px;
-  display: flex; flex-direction: column; flex: 1;
-  @media (max-width: 768px) { padding: 32px 28px; }
+const HeroImg = styled.img`
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0.7;
+  display: block;
 `;
 
-const SessionType = styled.div`
+const HeroOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const HeroTitle = styled.h1`
   font-family: 'Montserrat', sans-serif;
-  font-size: 9px; font-weight: 300;
-  letter-spacing: 0.38em; text-transform: uppercase;
-  color: ${T.light}; margin-bottom: 16px;
+  font-weight: 200;
+  font-size: clamp(2.4rem, 6vw, 5.5rem);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: ${T.white};
+  text-align: center;
+  line-height: 1.18;
+  margin: 0;
+`;
+
+/* ── Packages label ──────────────────────────────────────────────── */
+const PackagesLabel = styled.div`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px; font-weight: 300;
+  letter-spacing: 0.46em; text-transform: uppercase;
+  color: ${T.mid};
+  padding: 80px 7% 48px;
+  @media (max-width: 768px) { padding: 56px 28px 36px; }
+`;
+
+/* ── Session Row ─────────────────────────────────────────────────── */
+const SessionRow = styled.div`
+  display: grid;
+  grid-template-columns: ${p => p.$reverse ? "40% 60%" : "60% 40%"};
+  min-height: 560px;
+  margin-bottom: 80px;
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    margin-bottom: 60px;
+  }
+`;
+
+/* Image column — order swaps for reverse rows on mobile */
+const ImageCol = styled.div`
+  position: relative;
+  order: ${p => p.$reverse ? 2 : 1};
+  @media (max-width: 900px) { order: 1; }
+`;
+
+const SessionImg = styled.img`
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  min-height: 420px;
+  @media (max-width: 900px) { min-height: 300px; max-height: 420px; }
+`;
+
+/* Thin horizontal rule across the image at ~90% height */
+const ImgRule = styled.div`
+  position: absolute;
+  bottom: 10%;
+  left: 0; right: 0;
+  height: 1px;
+  background: rgba(255,255,255,0.55);
+`;
+
+/* Text column */
+const TextCol = styled.div`
+  order: ${p => p.$reverse ? 1 : 2};
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: ${p => p.$reverse ? "60px 7% 60px 7%" : "60px 7% 60px 7%"};
+  @media (max-width: 900px) { order: 2; padding: 40px 28px; }
 `;
 
 const SessionName = styled.h2`
   font-family: 'Montserrat', sans-serif;
-  font-size: clamp(1.8rem, 3vw, 2.6rem);
-  font-weight: 200; letter-spacing: 0.18em;
-  text-transform: uppercase; color: ${T.black};
-  margin: 0 0 32px;
+  font-size: clamp(2rem, 3.8vw, 3.6rem);
+  font-weight: 200;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: ${T.black};
+  margin: 0 0 20px;
+  line-height: 1.15;
 `;
 
-const Divider = styled.div`height: 1px; background: ${T.border}; margin-bottom: 32px;`;
-
-const IdealLabel = styled.div`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 9px; font-weight: 400;
-  letter-spacing: 0.3em; text-transform: uppercase;
-  color: ${T.black}; margin-bottom: 16px;
-`;
-
-const IdealList = styled.ul`
-  list-style: none; padding: 0; margin: 0 0 32px;
-  li {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 13px; font-weight: 300;
-    line-height: 2; color: ${T.mid};
-    padding-left: 16px; position: relative;
-    &::before {
-      content: '—';
-      position: absolute; left: 0;
-      color: ${T.light};
-    }
-  }
-`;
-
-const Includes = styled.div`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 11px; font-weight: 300;
-  letter-spacing: 0.12em; color: ${T.mid};
-  margin-bottom: 40px; line-height: 1.8;
-  flex: 1;
-  span { color: ${T.black}; }
-`;
-
-const BookBtn = styled.button`
+const BookLink = styled.button`
   font-family: 'Montserrat', sans-serif;
   font-size: 10px; font-weight: 300;
-  letter-spacing: 0.3em; text-transform: uppercase;
-  background: ${T.black}; color: #fff;
-  border: none; padding: 16px;
-  cursor: pointer; transition: background 0.25s;
-  &:hover { background: #333; }
-  align-self: stretch;
+  letter-spacing: 0.34em; text-transform: uppercase;
+  color: ${T.black};
+  background: none; border: none; padding: 0;
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: 52px;
+  transition: color 0.2s;
+  &:hover { color: ${T.mid}; }
+`;
+
+const IdealLabel = styled.p`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px; font-weight: 300;
+  color: ${T.black}; margin: 0 0 10px;
+`;
+
+const IdealItem = styled.p`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px; font-weight: 300;
+  color: ${T.mid}; margin: 0 0 6px;
+  line-height: 1.9;
+`;
+
+const Deliverable = styled.p`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px; font-weight: 300;
+  color: ${T.mid}; margin: 12px 0 0;
+  font-style: italic;
+`;
+
+/* Placeholder when no image is uploaded yet */
+const ImgPlaceholder = styled.div`
+  width: 100%; height: 100%;
+  min-height: 420px;
+  background: #f0ece7;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px; font-weight: 300;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: ${T.light};
 `;
 
 const FooterBar = styled.footer`
-  background: ${T.cream};
-  border-top: 1px solid ${T.border};
+  background: #fdf8f3;
+  border-top: 1px solid #e8e3dc;
   padding: 20px 48px;
   display: flex; justify-content: space-between; align-items: center;
   font-family: 'Montserrat', sans-serif;
@@ -162,75 +186,57 @@ const ReservationPage = (props) => {
       <GlobalRes />
       <SharedNav active="reservation" nav={props} isAdmin={props.isAdmin} />
 
-      <Header>
-        <Label>Work With Me</Label>
-        <PageTitle>Book a Session</PageTitle>
-        <Intro>
-          Every session is customized to you. Choose the experience that fits
-          your vision — then reach out and let's make it happen.
-        </Intro>
-      </Header>
+      {/* Hero Banner */}
+      <Hero>
+        {images["reservation-hero"]
+          ? <HeroImg src={images["reservation-hero"]} alt="Session Reservation" />
+          : null
+        }
+        <HeroOverlay>
+          <HeroTitle>Session<br />Reservation</HeroTitle>
+        </HeroOverlay>
+      </Hero>
 
-      <CardsSection>
-        {/* Portrait Session */}
-        <Card>
-          {images["portrait-session"] && (
-            <CardImage>
-              <img src={images["portrait-session"]} alt="Portrait Session" />
-            </CardImage>
-          )}
-          <CardBody>
-            <SessionType>Session Type 01</SessionType>
-            <SessionName>Portrait Session</SessionName>
-            <Divider />
+      <PackagesLabel>Packages</PackagesLabel>
 
-            <IdealLabel>Ideal for</IdealLabel>
-            <IdealList>
-              <li>Headshots</li>
-              <li>Mini sessions</li>
-              <li>Studio family portraits</li>
-            </IdealList>
+      {/* Portrait Session — image left, text right */}
+      <SessionRow>
+        <ImageCol>
+          {images["portrait-session"]
+            ? <SessionImg src={images["portrait-session"]} alt="Portrait Session" />
+            : <ImgPlaceholder>Portrait Session</ImgPlaceholder>
+          }
+          <ImgRule />
+        </ImageCol>
+        <TextCol>
+          <SessionName>Portrait Session</SessionName>
+          <BookLink onClick={onContact}>Contact for Booking</BookLink>
+          <IdealLabel>Ideal for :</IdealLabel>
+          <IdealItem>Headshot</IdealItem>
+          <IdealItem>Mini session</IdealItem>
+          <IdealItem>Studio family portrait</IdealItem>
+          <Deliverable>(Provide 5 digitally edited images)</Deliverable>
+        </TextCol>
+      </SessionRow>
 
-            <Includes>
-              <span>5</span> digitally edited high-resolution images<br />
-              Online gallery delivered within 2 weeks<br />
-              1–2 hour session
-            </Includes>
-
-            <BookBtn onClick={onContact}>Contact for Booking</BookBtn>
-          </CardBody>
-        </Card>
-
-        {/* Standard Session */}
-        <Card>
-          {images["standard-session"] && (
-            <CardImage>
-              <img src={images["standard-session"]} alt="Standard Session" />
-            </CardImage>
-          )}
-          <CardBody>
-            <SessionType>Session Type 02</SessionType>
-            <SessionName>Standard Session</SessionName>
-            <Divider />
-
-            <IdealLabel>Ideal for</IdealLabel>
-            <IdealList>
-              <li>Maternity sessions</li>
-              <li>Outdoor family sessions</li>
-              <li>Creative portrait series</li>
-              <li>Brand photo days</li>
-            </IdealList>
-
-            <Includes>
-              <span>20</span> digitally edited high-resolution images<br />
-              Online gallery delivered within 2–3 weeks<br />
-              2–3 hour session · multiple locations
-            </Includes>
-
-            <BookBtn onClick={onContact}>Contact for Booking</BookBtn>
-          </CardBody>
-        </Card>
-      </CardsSection>
+      {/* Standard Session — text left, image right */}
+      <SessionRow $reverse>
+        <TextCol $reverse>
+          <SessionName>Standard Session</SessionName>
+          <BookLink onClick={onContact}>Contact for Booking</BookLink>
+          <IdealLabel>Ideal for:</IdealLabel>
+          <IdealItem>Maternity</IdealItem>
+          <IdealItem>Outdoor family session</IdealItem>
+          <Deliverable>(Provide 20 digitally edited images)</Deliverable>
+        </TextCol>
+        <ImageCol $reverse>
+          {images["standard-session"]
+            ? <SessionImg src={images["standard-session"]} alt="Standard Session" />
+            : <ImgPlaceholder>Standard Session</ImgPlaceholder>
+          }
+          <ImgRule />
+        </ImageCol>
+      </SessionRow>
 
       <GetInTouch onContact={onContact} />
 
