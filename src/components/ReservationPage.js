@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import SharedNav from "./SharedNav";
 import GetInTouch from "./GetInTouch";
+import { photoAPI } from "../services/api";
 
 const T = {
   cream: "#fdf8f3", white: "#ffffff", black: "#111111",
@@ -53,10 +54,29 @@ const CardsSection = styled.section`
 
 const Card = styled.div`
   border: 1px solid ${T.border};
-  padding: 52px 48px 48px;
   background: ${T.cream};
   display: flex; flex-direction: column;
-  @media (max-width: 768px) { padding: 36px 28px; }
+  overflow: hidden;
+`;
+
+const CardImage = styled.div`
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: ${T.border};
+  overflow: hidden;
+  img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s ease;
+  }
+  &:hover img { transform: scale(1.03); }
+`;
+
+const CardBody = styled.div`
+  padding: 48px 48px 44px;
+  display: flex; flex-direction: column; flex: 1;
+  @media (max-width: 768px) { padding: 32px 28px; }
 `;
 
 const SessionType = styled.div`
@@ -131,6 +151,11 @@ const FooterBar = styled.footer`
 
 const ReservationPage = (props) => {
   const { onContact } = props;
+  const [images, setImages] = useState({});
+
+  useEffect(() => {
+    photoAPI.getHighlights().then(h => setImages(h)).catch(() => {});
+  }, []);
 
   return (
     <Page>
@@ -149,47 +174,61 @@ const ReservationPage = (props) => {
       <CardsSection>
         {/* Portrait Session */}
         <Card>
-          <SessionType>Session Type 01</SessionType>
-          <SessionName>Portrait Session</SessionName>
-          <Divider />
+          {images["portrait-session"] && (
+            <CardImage>
+              <img src={images["portrait-session"]} alt="Portrait Session" />
+            </CardImage>
+          )}
+          <CardBody>
+            <SessionType>Session Type 01</SessionType>
+            <SessionName>Portrait Session</SessionName>
+            <Divider />
 
-          <IdealLabel>Ideal for</IdealLabel>
-          <IdealList>
-            <li>Headshots</li>
-            <li>Mini sessions</li>
-            <li>Studio family portraits</li>
-          </IdealList>
+            <IdealLabel>Ideal for</IdealLabel>
+            <IdealList>
+              <li>Headshots</li>
+              <li>Mini sessions</li>
+              <li>Studio family portraits</li>
+            </IdealList>
 
-          <Includes>
-            <span>5</span> digitally edited high-resolution images<br />
-            Online gallery delivered within 2 weeks<br />
-            1–2 hour session
-          </Includes>
+            <Includes>
+              <span>5</span> digitally edited high-resolution images<br />
+              Online gallery delivered within 2 weeks<br />
+              1–2 hour session
+            </Includes>
 
-          <BookBtn onClick={onContact}>Contact for Booking</BookBtn>
+            <BookBtn onClick={onContact}>Contact for Booking</BookBtn>
+          </CardBody>
         </Card>
 
         {/* Standard Session */}
         <Card>
-          <SessionType>Session Type 02</SessionType>
-          <SessionName>Standard Session</SessionName>
-          <Divider />
+          {images["standard-session"] && (
+            <CardImage>
+              <img src={images["standard-session"]} alt="Standard Session" />
+            </CardImage>
+          )}
+          <CardBody>
+            <SessionType>Session Type 02</SessionType>
+            <SessionName>Standard Session</SessionName>
+            <Divider />
 
-          <IdealLabel>Ideal for</IdealLabel>
-          <IdealList>
-            <li>Maternity sessions</li>
-            <li>Outdoor family sessions</li>
-            <li>Creative portrait series</li>
-            <li>Brand photo days</li>
-          </IdealList>
+            <IdealLabel>Ideal for</IdealLabel>
+            <IdealList>
+              <li>Maternity sessions</li>
+              <li>Outdoor family sessions</li>
+              <li>Creative portrait series</li>
+              <li>Brand photo days</li>
+            </IdealList>
 
-          <Includes>
-            <span>20</span> digitally edited high-resolution images<br />
-            Online gallery delivered within 2–3 weeks<br />
-            2–3 hour session · multiple locations
-          </Includes>
+            <Includes>
+              <span>20</span> digitally edited high-resolution images<br />
+              Online gallery delivered within 2–3 weeks<br />
+              2–3 hour session · multiple locations
+            </Includes>
 
-          <BookBtn onClick={onContact}>Contact for Booking</BookBtn>
+            <BookBtn onClick={onContact}>Contact for Booking</BookBtn>
+          </CardBody>
         </Card>
       </CardsSection>
 
