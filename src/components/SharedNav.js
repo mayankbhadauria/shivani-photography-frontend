@@ -34,6 +34,17 @@ const NavBtn = styled.button`
 
 const AdminBtn = styled(NavBtn)`color: ${props => props.$active ? "#b8962e" : "#c9a84c"};`;
 
+const NavCTA = styled.button`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 9px; font-weight: 400;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: ${T.white}; background: ${T.black};
+  border: none; padding: 10px 20px;
+  cursor: pointer; transition: background 0.2s;
+  white-space: nowrap;
+  &:hover { background: #333; }
+`;
+
 const Logo = styled.div`
   font-family: 'Montserrat', sans-serif;
   font-size: 12px; font-weight: 300;
@@ -66,8 +77,8 @@ const SharedNav = ({ active, nav, isAdmin }) => {
       <NavRight>
         <NavBtn $active={active === "portfolio" || active === "gallery"} onClick={nav.onPortfolio}>Portfolio</NavBtn>
         <NavBtn $active={active === "reservation"} onClick={nav.onReservation}>Reservation</NavBtn>
-        <NavBtn $active={active === "contact"} onClick={nav.onContact}>Contact</NavBtn>
         <NavBtn onClick={nav.onSignOut}>Sign Out</NavBtn>
+        <NavCTA onClick={nav.onContact}>Get in Touch</NavCTA>
       </NavRight>
     </Nav>
   );

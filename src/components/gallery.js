@@ -78,6 +78,17 @@ const NavLogo = styled.div`
 
 const NavRight = styled(NavLeft)`justify-content: flex-end;`;
 
+const NavCTA = styled.button`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 9px; font-weight: 400;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: ${T.white}; background: ${T.black};
+  border: none; padding: 10px 20px;
+  cursor: pointer; transition: background 0.2s;
+  white-space: nowrap;
+  &:hover { background: #333; }
+`;
+
 /* Hero / header */
 const GalleryHeader = styled.div`
   padding: 140px 80px 64px;
@@ -289,7 +300,7 @@ function MasonryGrid({ images, offset, onOpen }) {
 }
 
 /* ─── Gallery page ────────────────────────────────────── */
-const Gallery = ({ category, onSignOut, onHome, onPortfolio }) => {
+const Gallery = ({ category, onSignOut, onHome, onPortfolio, onContact }) => {
   const [images,     setImages]     = useState([]);
   const [hasMore,    setHasMore]    = useState(false);
   const [nextOffset, setNextOffset] = useState(null);
@@ -359,6 +370,7 @@ const Gallery = ({ category, onSignOut, onHome, onPortfolio }) => {
         <NavLogo>Shivani Photography</NavLogo>
         <NavRight>
           <NavBtn onClick={onSignOut}>Sign Out</NavBtn>
+          <NavCTA onClick={onContact}>Get in Touch</NavCTA>
         </NavRight>
       </Nav>
 

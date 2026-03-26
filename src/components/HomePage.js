@@ -87,6 +87,17 @@ const NavRight = styled(NavGroup)`
   justify-content: flex-end;
 `;
 
+const NavCTA = styled.button`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 9px; font-weight: 400;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: ${T.white}; background: ${T.black};
+  border: none; padding: 10px 20px;
+  cursor: pointer; transition: background 0.2s;
+  white-space: nowrap;
+  &:hover { background: #333; }
+`;
+
 /* Hero */
 const Hero = styled.section`
   padding-top: 72px;
@@ -599,8 +610,8 @@ const HomePage = ({ onSignOut, onViewGallery, onPortfolio, onAdmin, onAbout, onI
         <NavRight>
           <NavLink onClick={onPortfolio}>Portfolio</NavLink>
           <NavLink onClick={onReservation}>Reservation</NavLink>
-          <NavLink onClick={onContact}>Contact</NavLink>
           <NavLink onClick={onSignOut}>Sign Out</NavLink>
+          <NavCTA onClick={onContact}>Get in Touch</NavCTA>
         </NavRight>
       </Nav>
 
