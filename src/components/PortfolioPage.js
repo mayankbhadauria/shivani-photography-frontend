@@ -116,26 +116,31 @@ const PortfolioPage = (props) => {
   const [covers, setCovers] = useState({});
 
   useEffect(() => {
-    // Fetch first image from each single category as cover
     const fetchCovers = async () => {
       const results = {};
-      await Promise.allSettled(
-        PORTFOLIO_CATS
-          .filter(c => c.apiId)
-          .map(async (cat) => {
-            try {
-              const res = await photoAPI.getCategoryImages(cat.apiId, 0);
-              const imgs = res.images || [];
-              if (imgs[0]) results[cat.id] = imgs[0].thumbnail || imgs[0].display;
-            } catch { /* no cover */ }
-          })
-      );
-      // For brands-and-events, try brands first
+
+      // 1. Try highlight covers first (admin-selected)
       try {
-        const res = await photoAPI.getCategoryImages("brands", 0);
-        const imgs = res.images || [];
-        if (imgs[0]) results["brands-and-events"] = imgs[0].thumbnail || imgs[0].display;
-      } catch { /* no cover */ }
+        const highlights = await photoAPI.getHighlights();
+        PORTFOLIO_CATS.forEach(cat => {
+          const slot = `cover-${cat.id}`;
+          if (highlights[slot]) results[cat.id] = highlights[slot];
+        });
+      } catch { /* ignore */ }
+
+      // 2. Fall back to first uploaded photo for any tile without a cover
+      const needsFallback = PORTFOLIO_CATS.filter(c => !results[c.id]);
+      await Promise.allSettled(
+        needsFallback.map(async (cat) => {
+          const apiId = cat.apiId || "brands";
+          try {
+            const res = await photoAPI.getCategoryImages(apiId, 0);
+            const imgs = res.images || [];
+            if (imgs[0]) results[cat.id] = imgs[0].display || imgs[0].thumbnail;
+          } catch { /* no cover */ }
+        })
+      );
+
       setCovers(results);
     };
     fetchCovers();

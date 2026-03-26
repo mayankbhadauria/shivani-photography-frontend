@@ -23,13 +23,17 @@ const CATEGORIES = [
 ];
 
 const HIGHLIGHT_SLOTS = [
-  { id: "hero",              label: "Hero",             desc: "Home page full-width banner image" },
-  { id: "about",             label: "About",            desc: "About section portrait photo" },
-  { id: "contact",           label: "Contact",          desc: "Contact section photo" },
-  { id: "login",             label: "Login",            desc: "Login page left panel photo" },
-  { id: "portrait-session",  label: "Portrait Session",  desc: "Reservation page — Portrait Session image" },
-  { id: "standard-session",  label: "Standard Session",  desc: "Reservation page — Standard Session image" },
-  { id: "reservation-hero",  label: "Reservation Hero",  desc: "Reservation page — full-width banner image" },
+  { id: "hero",                      label: "Hero",                    desc: "Home page full-width banner image" },
+  { id: "about",                     label: "About",                   desc: "About section portrait photo" },
+  { id: "contact",                   label: "Contact",                 desc: "Contact section photo" },
+  { id: "login",                     label: "Login",                   desc: "Login page left panel photo" },
+  { id: "portrait-session",          label: "Portrait Session",        desc: "Reservation page — Portrait Session image" },
+  { id: "standard-session",          label: "Standard Session",        desc: "Reservation page — Standard Session image" },
+  { id: "reservation-hero",          label: "Reservation Hero",        desc: "Reservation page — full-width banner image" },
+  { id: "cover-maternity",           label: "Cover — Maternity",       desc: "Portfolio page tile cover for Maternity" },
+  { id: "cover-newborn",             label: "Cover — Newborn",         desc: "Portfolio page tile cover for Newborn" },
+  { id: "cover-family-portraits",    label: "Cover — Family Portraits",desc: "Portfolio page tile cover for Family Portraits" },
+  { id: "cover-brands-and-events",   label: "Cover — Brands & Events", desc: "Portfolio page tile cover for Brands & Events" },
 ];
 
 /* ── Styled ─────────────────────────────────────────────────────── */
