@@ -72,7 +72,7 @@ const SharedNav = ({ active, nav, isAdmin }) => {
         {isAdmin && <AdminBtn onClick={nav.onAdmin}>Admin</AdminBtn>}
       </NavGroup>
 
-      <Logo onClick={nav.onHome}>Shivani Photography</Logo>
+      <Logo onClick={nav.onHome}>Shivani Jadon Photography</Logo>
 
       <NavRight>
         <NavBtn $active={active === "portfolio" || active === "gallery"} onClick={nav.onPortfolio}>Portfolio</NavBtn>

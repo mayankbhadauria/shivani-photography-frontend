@@ -206,7 +206,7 @@ const LoginPage = ({ onLogin }) => {
         {loginBg ? <img src={loginBg} alt="" /> : <div className="ph">▣</div>}
       </PhotoPanel>
         <FormPanel>
-          <Logo>Shivani Photography</Logo>
+          <Logo>Shivani Jadon Photography</Logo>
           <Tagline>Set New Password</Tagline>
           {error && <ErrorMsg>{error}</ErrorMsg>}
           <Form onSubmit={handleNewPassword}>
@@ -229,7 +229,7 @@ const LoginPage = ({ onLogin }) => {
         {loginBg ? <img src={loginBg} alt="" /> : <div className="ph">▣</div>}
       </PhotoPanel>
       <FormPanel>
-        <Logo>Shivani Photography</Logo>
+        <Logo>Shivani Jadon Photography</Logo>
         <Tagline>Portfolio</Tagline>
         {error && <ErrorMsg>{error}</ErrorMsg>}
         <Form onSubmit={handleLogin}>

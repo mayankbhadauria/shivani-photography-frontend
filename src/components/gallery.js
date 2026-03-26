@@ -367,7 +367,7 @@ const Gallery = ({ category, onSignOut, onHome, onPortfolio, onContact }) => {
         <NavLeft>
           <NavBtn onClick={onPortfolio || onHome}>← Portfolio</NavBtn>
         </NavLeft>
-        <NavLogo>Shivani Photography</NavLogo>
+        <NavLogo>Shivani Jadon Photography</NavLogo>
         <NavRight>
           <NavBtn onClick={onSignOut}>Sign Out</NavBtn>
           <NavCTA onClick={onContact}>Get in Touch</NavCTA>

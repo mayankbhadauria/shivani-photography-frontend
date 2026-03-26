@@ -61,7 +61,7 @@ const Header = ({ apiHealth, isAdmin }) => {
 
   return (
     <HeaderContainer>
-      <Title>Shivani Photography</Title>
+      <Title>Shivani Jadon Photography</Title>
       <Subtitle>Capturing Life's Beautiful Moments</Subtitle>
       {isAdmin && apiHealth && (
         <StatusIndicator connected={isConnected}>

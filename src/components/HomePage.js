@@ -605,7 +605,7 @@ const HomePage = ({ onSignOut, onViewGallery, onPortfolio, onAdmin, onAbout, onI
           {isAdmin && <NavLink onClick={onAdmin} style={{ color: "#c9a84c" }}>Admin</NavLink>}
         </NavGroup>
 
-        <NavLogo>Shivani Photography</NavLogo>
+        <NavLogo>Shivani Jadon Photography</NavLogo>
 
         <NavRight>
           <NavLink onClick={onPortfolio}>Portfolio</NavLink>

@@ -575,7 +575,7 @@ const AdminPage = ({ onHome, onSignOut }) => {
   return (
     <Page>
       <TopBar>
-        <Logo>Admin Panel · Shivani Photography</Logo>
+        <Logo>Admin Panel · Shivani Jadon Photography</Logo>
         <div style={{ display: "flex", gap: 12 }}>
           <TopBtn onClick={onHome}>← View Site</TopBtn>
           <TopBtn onClick={onSignOut}>Sign Out</TopBtn>
