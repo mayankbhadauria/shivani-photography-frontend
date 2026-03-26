@@ -440,13 +440,136 @@ const HighlightsTab = () => {
   );
 };
 
+/* ── Visibility tab styles ──────────────────────────────────────── */
+const VisibilityGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 8px;
+`;
+
+const VisibilityCard = styled.div`
+  background: ${T.white};
+  border: 1px solid ${T.border};
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+`;
+
+const VisibilityInfo = styled.div`
+  .cat-name {
+    font-size: 11px; font-weight: 400;
+    letter-spacing: 0.28em; text-transform: uppercase;
+    color: ${T.black}; margin-bottom: 4px;
+  }
+  .cat-status {
+    font-size: 10px; font-weight: 300;
+    letter-spacing: 0.08em;
+    color: ${props => props.$visible ? "#27ae60" : T.light};
+  }
+`;
+
+const Toggle = styled.button`
+  position: relative;
+  width: 48px; height: 26px;
+  border-radius: 13px;
+  border: none;
+  background: ${props => props.$on ? T.black : T.border};
+  cursor: pointer;
+  transition: background 0.25s;
+  flex-shrink: 0;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: ${props => props.$on ? "25px" : "3px"};
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: ${T.white};
+    transition: left 0.25s;
+  }
+`;
+
+const PORTFOLIO_CATS_ADMIN = [
+  { id: "maternity",         label: "Maternity" },
+  { id: "newborn",           label: "Newborn" },
+  { id: "family-portraits",  label: "Family Portraits" },
+  { id: "brands-and-events", label: "Brands & Events" },
+];
+
+const VisibilityTab = () => {
+  const [visibility, setVisibility] = useState(null);
+  const [saving,     setSaving]     = useState(false);
+  const [status,     setStatus]     = useState(null);
+
+  useEffect(() => {
+    photoAPI.getVisibility()
+      .then(v => {
+        // Fill in any missing keys as visible
+        const filled = {};
+        PORTFOLIO_CATS_ADMIN.forEach(c => { filled[c.id] = v[c.id] !== false; });
+        setVisibility(filled);
+      })
+      .catch(() => {
+        const all = {};
+        PORTFOLIO_CATS_ADMIN.forEach(c => { all[c.id] = true; });
+        setVisibility(all);
+      });
+  }, []);
+
+  const toggle = async (id) => {
+    const next = { ...visibility, [id]: !visibility[id] };
+    setVisibility(next);
+    setSaving(true);
+    setStatus(null);
+    try {
+      await photoAPI.updateVisibility(next);
+      setStatus({ msg: "Saved", error: false });
+    } catch {
+      setStatus({ msg: "Save failed", error: true });
+      setVisibility(visibility); // revert
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!visibility) return <SectionTitle>Loading…</SectionTitle>;
+
+  return (
+    <>
+      <SectionTitle>
+        Show or hide categories on the Portfolio page and home page.
+        {saving && " Saving…"}
+      </SectionTitle>
+      {status && <StatusMsg error={status.error}>{status.msg}</StatusMsg>}
+      <VisibilityGrid>
+        {PORTFOLIO_CATS_ADMIN.map(cat => (
+          <VisibilityCard key={cat.id}>
+            <VisibilityInfo $visible={visibility[cat.id]}>
+              <div className="cat-name">{cat.label}</div>
+              <div className="cat-status">
+                {visibility[cat.id] ? "Visible to clients" : "Hidden from clients"}
+              </div>
+            </VisibilityInfo>
+            <Toggle $on={visibility[cat.id]} onClick={() => toggle(cat.id)} />
+          </VisibilityCard>
+        ))}
+      </VisibilityGrid>
+    </>
+  );
+};
+
 /* ── Main AdminPage ─────────────────────────────────────────────── */
 const AdminPage = ({ onHome, onSignOut }) => {
   const [activeTab, setActiveTab] = useState("maternity");
 
   const allTabs = [
     ...CATEGORIES,
-    { id: "highlights", label: "Highlights" },
+    { id: "highlights",  label: "Highlights" },
+    { id: "visibility",  label: "Visibility" },
   ];
 
   return (
@@ -470,6 +593,8 @@ const AdminPage = ({ onHome, onSignOut }) => {
       <Content>
         {activeTab === "highlights"
           ? <HighlightsTab />
+          : activeTab === "visibility"
+          ? <VisibilityTab />
           : <CategoryTab key={activeTab} category={activeTab} />
         }
       </Content>

@@ -108,6 +108,16 @@ class PhotoAPI {
     };
   }
 
+  async getVisibility() {
+    const response = await this.client.get("/api/config/visibility");
+    return response.data;
+  }
+
+  async updateVisibility(visibility) {
+    const response = await this.client.put("/api/config/visibility", visibility);
+    return response.data;
+  }
+
   async getBrandsAndEvents() {
     const response = await this.client.get("/api/gallery/brands-and-events");
     return response.data;

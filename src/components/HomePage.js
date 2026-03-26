@@ -551,6 +551,7 @@ const ContactText = styled(AboutText)``;
 const HomePage = ({ onSignOut, onViewGallery, onPortfolio, onAdmin, onAbout, onInfo, onReservation, onContact, isAdmin: isAdminProp }) => {
   const [coverImages, setCoverImages] = useState({});
   const [highlights,  setHighlights]  = useState({});
+  const [visibility,  setVisibility]  = useState({});
   const [isAdmin,     setIsAdmin]     = useState(isAdminProp || false);
   const [scrolled,    setScrolled]    = useState(false);
   const heroRef = useRef(null);
@@ -567,6 +568,9 @@ const HomePage = ({ onSignOut, onViewGallery, onPortfolio, onAdmin, onAbout, onI
 
     // Load highlight images
     photoAPI.getHighlights().then(setHighlights).catch(() => {});
+
+    // Load category visibility
+    photoAPI.getVisibility().then(setVisibility).catch(() => {});
 
     getUserGroups().then(groups => setIsAdmin(groups.includes("Admin")));
 
@@ -619,7 +623,7 @@ const HomePage = ({ onSignOut, onViewGallery, onPortfolio, onAdmin, onAbout, onI
         <SectionHeader>Portfolio</SectionHeader>
 
         <PortfolioGrid>
-          {CATEGORIES.map((cat) => {
+          {CATEGORIES.filter(cat => visibility[cat.id] !== false).map((cat) => {
             const cover = coverImages[cat.id] || null;
             return (
               <CategoryItem key={cat.id} onClick={() => onViewGallery(cat.id)}>

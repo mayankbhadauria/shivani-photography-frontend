@@ -113,7 +113,14 @@ const PORTFOLIO_CATS = [
 
 const PortfolioPage = (props) => {
   const { onViewGallery } = props;
-  const [covers, setCovers] = useState({});
+  const [covers,     setCovers]     = useState({});
+  const [visibility, setVisibility] = useState(null);
+
+  useEffect(() => {
+    photoAPI.getVisibility()
+      .then(v => setVisibility(v))
+      .catch(() => setVisibility({}));
+  }, []);
 
   useEffect(() => {
     const fetchCovers = async () => {
@@ -157,7 +164,7 @@ const PortfolioPage = (props) => {
       </Header>
 
       <Grid>
-        {PORTFOLIO_CATS.map((cat) => (
+        {PORTFOLIO_CATS.filter(cat => visibility === null || visibility[cat.id] !== false).map((cat) => (
           <Tile key={cat.id} onClick={() => onViewGallery(cat.id)}>
             {covers[cat.id]
               ? <img src={covers[cat.id]} alt={cat.label} />
