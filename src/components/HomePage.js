@@ -34,30 +34,31 @@ const Nav = styled.nav`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 48px;
+  padding: 24px 48px;
   background: ${T.cream};
   border-bottom: 1px solid ${props => props.scrolled ? T.border : "transparent"};
   transition: border-color 0.3s;
 
-  @media (max-width: 768px) { padding: 16px 20px; }
+  @media (max-width: 768px) { padding: 18px 20px; }
 `;
 
 const NavGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 32px;
-  min-width: 160px;
+  min-width: 180px;
 
+  @media (max-width: 900px) { gap: 20px; }
   @media (max-width: 768px) { display: none; }
 `;
 
 const NavLink = styled.button`
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
-  font-weight: 300;
-  letter-spacing: 0.22em;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: ${T.mid};
+  color: #888;
   background: none;
   border: none;
   cursor: pointer;
@@ -69,32 +70,23 @@ const NavLink = styled.button`
 const NavLogo = styled.div`
   font-family: 'Montserrat', sans-serif;
   font-size: 13px;
-  font-weight: 300;
-  letter-spacing: 0.28em;
+  font-weight: 400;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: ${T.black};
   text-align: center;
   flex: 1;
+  white-space: nowrap;
+  cursor: pointer;
 
-  @media (max-width: 768px) {
+  @media (max-width: 600px) {
     font-size: 10px;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.12em;
   }
 `;
 
 const NavRight = styled(NavGroup)`
   justify-content: flex-end;
-`;
-
-const NavCTA = styled.button`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 9px; font-weight: 400;
-  letter-spacing: 0.28em; text-transform: uppercase;
-  color: ${T.white}; background: ${T.black};
-  border: none; padding: 10px 20px;
-  cursor: pointer; transition: background 0.2s;
-  white-space: nowrap;
-  &:hover { background: #333; }
 `;
 
 /* Hero */
@@ -597,15 +589,14 @@ const HomePage = ({ onViewGallery, onPortfolio, onAbout, onInfo, onReservation, 
         <NavGroup>
           <NavLink onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Home</NavLink>
           <NavLink onClick={onAbout}>About</NavLink>
-          <NavLink onClick={onInfo}>Info</NavLink>
         </NavGroup>
 
-        <NavLogo>Shivani Jadon Photography</NavLogo>
+        <NavLogo onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>ShivaniJadonPhotography</NavLogo>
 
         <NavRight>
+          <NavLink onClick={onInfo}>Info</NavLink>
           <NavLink onClick={onPortfolio}>Portfolio</NavLink>
           <NavLink onClick={onReservation}>Reservation</NavLink>
-          <NavCTA onClick={onContact}>Get in Touch</NavCTA>
         </NavRight>
       </Nav>
 

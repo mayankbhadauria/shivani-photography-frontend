@@ -61,33 +61,24 @@ const NavLeft = styled.div`
 
 const NavBtn = styled.button`
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px; font-weight: 300;
-  letter-spacing: 0.22em; text-transform: uppercase;
-  color: ${T.mid}; background: none; border: none;
+  font-size: 11px; font-weight: 400;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: #888; background: none; border: none;
   cursor: pointer; padding: 0; transition: color 0.2s;
   &:hover { color: ${T.black}; }
 `;
 
 const NavLogo = styled.div`
   font-family: 'Montserrat', sans-serif;
-  font-size: 12px; font-weight: 300;
-  letter-spacing: 0.28em; text-transform: uppercase;
+  font-size: 13px; font-weight: 400;
+  letter-spacing: 0.22em; text-transform: uppercase;
   color: ${T.black}; flex: 1; text-align: center;
-  @media (max-width: 600px) { font-size: 9px; letter-spacing: 0.15em; }
+  white-space: nowrap;
+  @media (max-width: 600px) { font-size: 10px; letter-spacing: 0.12em; }
 `;
 
 const NavRight = styled(NavLeft)`justify-content: flex-end;`;
 
-const NavCTA = styled.button`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 9px; font-weight: 400;
-  letter-spacing: 0.28em; text-transform: uppercase;
-  color: ${T.white}; background: ${T.black};
-  border: none; padding: 10px 20px;
-  cursor: pointer; transition: background 0.2s;
-  white-space: nowrap;
-  &:hover { background: #333; }
-`;
 
 /* Hero / header */
 const GalleryHeader = styled.div`
@@ -367,9 +358,9 @@ const Gallery = ({ category, onHome, onPortfolio, onContact }) => {
         <NavLeft>
           <NavBtn onClick={onPortfolio || onHome}>← Portfolio</NavBtn>
         </NavLeft>
-        <NavLogo>Shivani Jadon Photography</NavLogo>
+        <NavLogo>ShivaniJadonPhotography</NavLogo>
         <NavRight>
-          <NavCTA onClick={onContact}>Get in Touch</NavCTA>
+          <NavBtn onClick={onContact}>Get in Touch</NavBtn>
         </NavRight>
       </Nav>
 

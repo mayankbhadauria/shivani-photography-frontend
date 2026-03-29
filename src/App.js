@@ -24,7 +24,6 @@ function AdminApp() {
   const handleSignOut = useCallback(() => {
     signOut();
     setSession(null);
-    setIsAdmin(false);
     if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
   }, []);
 
