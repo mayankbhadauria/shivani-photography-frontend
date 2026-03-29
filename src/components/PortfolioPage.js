@@ -156,7 +156,7 @@ const PortfolioPage = (props) => {
   return (
     <Page>
       <GlobalPortfolio />
-      <SharedNav active="portfolio" nav={props} isAdmin={props.isAdmin} />
+      <SharedNav active="portfolio" nav={props} />
 
       <Header>
         <Label>Work</Label>

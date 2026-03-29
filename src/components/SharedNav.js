@@ -32,7 +32,6 @@ const NavBtn = styled.button`
   &:hover { color: ${T.black}; }
 `;
 
-const AdminBtn = styled(NavBtn)`color: ${props => props.$active ? "#b8962e" : "#c9a84c"};`;
 
 const NavCTA = styled.button`
   font-family: 'Montserrat', sans-serif;
@@ -55,7 +54,7 @@ const Logo = styled.div`
 
 const NavRight = styled(NavGroup)`justify-content: flex-end; min-width: 200px;`;
 
-const SharedNav = ({ active, nav, isAdmin }) => {
+const SharedNav = ({ active, nav }) => {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 10);
@@ -69,7 +68,6 @@ const SharedNav = ({ active, nav, isAdmin }) => {
         <NavBtn $active={active === "home"} onClick={nav.onHome}>Home</NavBtn>
         <NavBtn $active={active === "about"} onClick={nav.onAbout}>About</NavBtn>
         <NavBtn $active={active === "info"} onClick={nav.onInfo}>Info</NavBtn>
-        {isAdmin && <AdminBtn onClick={nav.onAdmin}>Admin</AdminBtn>}
       </NavGroup>
 
       <Logo onClick={nav.onHome}>Shivani Jadon Photography</Logo>
@@ -77,7 +75,6 @@ const SharedNav = ({ active, nav, isAdmin }) => {
       <NavRight>
         <NavBtn $active={active === "portfolio" || active === "gallery"} onClick={nav.onPortfolio}>Portfolio</NavBtn>
         <NavBtn $active={active === "reservation"} onClick={nav.onReservation}>Reservation</NavBtn>
-        <NavBtn onClick={nav.onSignOut}>Sign Out</NavBtn>
         <NavCTA onClick={nav.onContact}>Get in Touch</NavCTA>
       </NavRight>
     </Nav>

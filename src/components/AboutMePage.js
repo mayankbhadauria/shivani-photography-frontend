@@ -109,7 +109,7 @@ const AboutMePage = (props) => {
   return (
     <Page>
       <GlobalAbout />
-      <SharedNav active="about" nav={props} isAdmin={props.isAdmin} />
+      <SharedNav active="about" nav={props} />
 
       {/* Hero: text left, photo right */}
       <Hero>

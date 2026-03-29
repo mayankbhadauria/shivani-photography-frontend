@@ -300,7 +300,7 @@ function MasonryGrid({ images, offset, onOpen }) {
 }
 
 /* ─── Gallery page ────────────────────────────────────── */
-const Gallery = ({ category, onSignOut, onHome, onPortfolio, onContact }) => {
+const Gallery = ({ category, onHome, onPortfolio, onContact }) => {
   const [images,     setImages]     = useState([]);
   const [hasMore,    setHasMore]    = useState(false);
   const [nextOffset, setNextOffset] = useState(null);
@@ -369,7 +369,6 @@ const Gallery = ({ category, onSignOut, onHome, onPortfolio, onContact }) => {
         </NavLeft>
         <NavLogo>Shivani Jadon Photography</NavLogo>
         <NavRight>
-          <NavBtn onClick={onSignOut}>Sign Out</NavBtn>
           <NavCTA onClick={onContact}>Get in Touch</NavCTA>
         </NavRight>
       </Nav>

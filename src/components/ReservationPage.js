@@ -184,7 +184,7 @@ const ReservationPage = (props) => {
   return (
     <Page>
       <GlobalRes />
-      <SharedNav active="reservation" nav={props} isAdmin={props.isAdmin} />
+      <SharedNav active="reservation" nav={props} />
 
       {/* Hero Banner */}
       <Hero>

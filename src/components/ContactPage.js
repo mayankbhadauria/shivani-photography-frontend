@@ -146,7 +146,7 @@ const ContactPage = (props) => {
   return (
     <Page>
       <GlobalContact />
-      <SharedNav active="contact" nav={props} isAdmin={props.isAdmin} />
+      <SharedNav active="contact" nav={props} />
 
       <Main>
         <TextCol>

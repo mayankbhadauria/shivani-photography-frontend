@@ -199,7 +199,7 @@ const InfoPage = (props) => {
   return (
     <Page>
       <GlobalInfo />
-      <SharedNav active="info" nav={props} isAdmin={props.isAdmin} />
+      <SharedNav active="info" nav={props} />
 
       <Header>
         <Label>Session Info</Label>

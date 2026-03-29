@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import styled, { keyframes, createGlobalStyle } from "styled-components";
 import { photoAPI } from "../services/api";
-import { getUserGroups } from "../services/auth";
 
 /* ─── Design tokens ──────────────────────────────────── */
 const T = {
@@ -559,11 +558,10 @@ const ContactSection = styled(AboutSection)``;
 const ContactText = styled(AboutText)``;
 
 /* ─── Component ──────────────────────────────────────── */
-const HomePage = ({ onSignOut, onViewGallery, onPortfolio, onAdmin, onAbout, onInfo, onReservation, onContact, isAdmin: isAdminProp }) => {
+const HomePage = ({ onViewGallery, onPortfolio, onAbout, onInfo, onReservation, onContact }) => {
   const [coverImages, setCoverImages] = useState({});
   const [highlights,  setHighlights]  = useState({});
   const [visibility,  setVisibility]  = useState({});
-  const [isAdmin,     setIsAdmin]     = useState(isAdminProp || false);
   const [scrolled,    setScrolled]    = useState(false);
   const heroRef = useRef(null);
 
@@ -583,8 +581,6 @@ const HomePage = ({ onSignOut, onViewGallery, onPortfolio, onAdmin, onAbout, onI
     // Load category visibility
     photoAPI.getVisibility().then(setVisibility).catch(() => {});
 
-    getUserGroups().then(groups => setIsAdmin(groups.includes("Admin")));
-
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -602,7 +598,6 @@ const HomePage = ({ onSignOut, onViewGallery, onPortfolio, onAdmin, onAbout, onI
           <NavLink onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Home</NavLink>
           <NavLink onClick={onAbout}>About</NavLink>
           <NavLink onClick={onInfo}>Info</NavLink>
-          {isAdmin && <NavLink onClick={onAdmin} style={{ color: "#c9a84c" }}>Admin</NavLink>}
         </NavGroup>
 
         <NavLogo>Shivani Jadon Photography</NavLogo>
@@ -610,7 +605,6 @@ const HomePage = ({ onSignOut, onViewGallery, onPortfolio, onAdmin, onAbout, onI
         <NavRight>
           <NavLink onClick={onPortfolio}>Portfolio</NavLink>
           <NavLink onClick={onReservation}>Reservation</NavLink>
-          <NavLink onClick={onSignOut}>Sign Out</NavLink>
           <NavCTA onClick={onContact}>Get in Touch</NavCTA>
         </NavRight>
       </Nav>
