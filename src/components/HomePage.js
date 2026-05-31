@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import styled, { keyframes, createGlobalStyle } from "styled-components";
 import { photoAPI } from "../services/api";
+import SharedNav from "./SharedNav";
 
 /* ─── Design tokens ──────────────────────────────────── */
 const T = {
@@ -20,78 +21,16 @@ const GlobalHome = createGlobalStyle`
 /* ─── Category definitions ──────────────────────────── */
 // Edit labels here freely; coverIndex = which loaded image to use as cover
 const CATEGORIES = [
+  { id: "family-portraits",  label: "FAMILY PORTRAITS" },
   { id: "maternity",         label: "MATERNITY" },
   { id: "newborn",           label: "NEWBORN" },
-  { id: "family-portraits",  label: "FAMILY PORTRAITS" },
   { id: "brands-and-events", label: "BRANDS & EVENTS" },
 ];
 
 /* ─── Styled components ──────────────────────────────── */
-const Nav = styled.nav`
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 48px;
-  background: ${T.cream};
-  border-bottom: 1px solid ${props => props.scrolled ? T.border : "transparent"};
-  transition: border-color 0.3s;
-
-  @media (max-width: 768px) { padding: 18px 20px; }
-`;
-
-const NavGroup = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  min-width: 180px;
-
-  @media (max-width: 900px) { gap: 20px; }
-  @media (max-width: 768px) { display: none; }
-`;
-
-const NavLink = styled.button`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #888;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.2s;
-  &:hover { color: ${T.black}; }
-`;
-
-const NavLogo = styled.div`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: ${T.black};
-  text-align: center;
-  flex: 1;
-  white-space: nowrap;
-  cursor: pointer;
-
-  @media (max-width: 600px) {
-    font-size: 10px;
-    letter-spacing: 0.12em;
-  }
-`;
-
-const NavRight = styled(NavGroup)`
-  justify-content: flex-end;
-`;
-
 /* Hero */
 const Hero = styled.section`
-  padding-top: 72px;
+  padding-top: 90px;
   background: ${T.cream};
   display: flex;
   flex-direction: column;
@@ -129,14 +68,14 @@ const HeroOverlay = styled.div`
 `;
 
 const HeroText = styled.h1`
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(2rem, 5vw, 4rem);
-  font-weight: 300;
-  font-style: italic;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: clamp(1.4rem, 3.5vw, 2.8rem);
+  font-weight: 200;
   color: #fff;
   text-align: center;
-  letter-spacing: 0.06em;
-  line-height: 1.2;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  line-height: 1.4;
   text-shadow: 0 2px 24px rgba(0,0,0,0.3);
   padding: 0 32px;
   margin: 0;
@@ -161,7 +100,7 @@ const ScrollHint = styled.div`
   align-items: center;
   gap: 8px;
   margin-top: 28px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 9px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
@@ -176,6 +115,17 @@ const ScrollHint = styled.div`
   }
 `;
 
+const HeroBookBtn = styled.button`
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 10px; font-weight: 300;
+  letter-spacing: 0.32em; text-transform: uppercase;
+  background: ${T.black}; color: #fff;
+  border: none; padding: 14px 36px;
+  cursor: pointer; transition: background 0.25s;
+  margin-top: 32px;
+  &:hover { background: #333; }
+`;
+
 /* Portfolio section */
 const PortfolioSection = styled.section`
   background: ${T.white};
@@ -185,7 +135,7 @@ const PortfolioSection = styled.section`
 const SectionHeader = styled.div`
   text-align: center;
   margin-bottom: 80px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 9px;
   letter-spacing: 0.45em;
   text-transform: uppercase;
@@ -240,7 +190,7 @@ const CatImageWrap = styled.div`
 `;
 
 const ViewGalleryLabel = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 9px;
   font-weight: 300;
   letter-spacing: 0.42em;
@@ -251,56 +201,13 @@ const ViewGalleryLabel = styled.div`
 `;
 
 const CategoryLabel = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: clamp(1.5rem, 2.5vw, 2.4rem);
   font-weight: 200;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: ${T.black};
   line-height: 1.2;
-`;
-
-/* Upload zone (admin only) */
-const UploadZoneWrapper = styled.div`
-  max-width: 1400px;
-  margin: 0 auto 60px;
-  padding: 0 80px;
-  @media (max-width: 768px) { padding: 0 24px; }
-`;
-
-const UploadBox = styled.div`
-  border: 1px dashed ${T.border};
-  padding: 32px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.25s;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 9px;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: ${T.light};
-  &:hover { border-color: ${T.mid}; color: ${T.mid}; }
-`;
-
-/* Load more */
-const LoadMoreWrap = styled.div`
-  text-align: center;
-  padding-top: 60px;
-`;
-
-const LoadMoreBtn = styled.button`
-  background: none;
-  border: 1px solid ${T.border};
-  color: ${T.mid};
-  font-family: 'Montserrat', sans-serif;
-  font-size: 9px;
-  font-weight: 300;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  padding: 16px 48px;
-  cursor: pointer;
-  transition: all 0.25s;
-  &:hover { background: ${T.black}; border-color: ${T.black}; color: ${T.white}; }
 `;
 
 /* Footer */
@@ -324,7 +231,7 @@ const FooterLinkCol = styled.div`
 `;
 
 const FooterLinkLabel = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 9px;
   font-weight: 300;
   letter-spacing: 0.38em;
@@ -333,7 +240,7 @@ const FooterLinkLabel = styled.div`
 `;
 
 const FooterLinkHeading = styled.button`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: clamp(1.2rem, 2vw, 1.8rem);
   font-weight: 200;
   letter-spacing: 0.22em;
@@ -370,7 +277,7 @@ const FooterIgIcon = styled.div`
 `;
 
 const FooterIgHandle = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 10px;
   font-weight: 300;
   letter-spacing: 0.32em;
@@ -401,7 +308,7 @@ const FooterBottomNav = styled.div`
 `;
 
 const FooterBottomLink = styled.button`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 9px;
   font-weight: 300;
   letter-spacing: 0.22em;
@@ -433,7 +340,7 @@ const FooterBottomRow2 = styled.div`
 `;
 
 const FooterCopy = styled.span`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 9px;
   font-weight: 300;
   letter-spacing: 0.12em;
@@ -466,7 +373,7 @@ const AboutText = styled.div`
 `;
 
 const SmallLabel = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 9px;
   letter-spacing: 0.4em;
   text-transform: uppercase;
@@ -475,7 +382,7 @@ const SmallLabel = styled.div`
 `;
 
 const BigHeading = styled.h2`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: clamp(1.8rem, 3vw, 2.8rem);
   font-weight: 200;
   letter-spacing: 0.16em;
@@ -486,7 +393,7 @@ const BigHeading = styled.h2`
 `;
 
 const BodyText = styled.p`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 13px;
   font-weight: 300;
   line-height: 2;
@@ -496,7 +403,7 @@ const BodyText = styled.p`
 `;
 
 const TextLink = styled.button`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 9px;
   font-weight: 300;
   letter-spacing: 0.3em;
@@ -549,33 +456,46 @@ const ContactSection = styled(AboutSection)``;
 
 const ContactText = styled(AboutText)``;
 
+/* ─── Static highlight URLs — predictable CloudFront paths ───
+   Pre-seeding these means all homepage images render on first paint
+   without waiting for the /api/highlights API call.
+   onError handlers hide broken imgs (shows container bg) if not uploaded yet. */
+const CF = 'https://shivanijadonphotography.com/gallery/highlights';
+const INITIAL_HIGHLIGHTS = {
+  hero:         `${CF}/hero.webp`,
+  'hero-mobile': `${CF}/hero-mobile.webp`,
+  about:        `${CF}/about.webp`,
+  contact:      `${CF}/contact.webp`,
+};
+const INITIAL_COVERS = {
+  'family-portraits':  `${CF}/cover-family-portraits.webp`,
+  'maternity':         `${CF}/cover-maternity.webp`,
+  'newborn':           `${CF}/cover-newborn.webp`,
+  'brands-and-events': `${CF}/cover-brands-and-events.webp`,
+};
+
 /* ─── Component ──────────────────────────────────────── */
-const HomePage = ({ onViewGallery, onPortfolio, onAbout, onInfo, onReservation, onContact }) => {
-  const [coverImages, setCoverImages] = useState({});
-  const [highlights,  setHighlights]  = useState({});
+const HomePage = ({ onViewGallery, onPortfolio, onAbout, onInfo, onReservation, onContact, onBooking, onHome }) => {
+  const [coverImages, setCoverImages] = useState(INITIAL_COVERS);
+  const [highlights,  setHighlights]  = useState(INITIAL_HIGHLIGHTS);
   const [visibility,  setVisibility]  = useState({});
-  const [scrolled,    setScrolled]    = useState(false);
   const heroRef = useRef(null);
 
   useEffect(() => {
-    // Load first image from each category as cover
-    const cats = CATEGORIES.map(c => c.id);
-    cats.forEach(cat => {
-      photoAPI.getCategoryImages(cat, 0).then(res => {
-        const first = res.images?.[0];
-        if (first) setCoverImages(prev => ({ ...prev, [cat]: first.display || first.original }));
-      }).catch(() => {});
-    });
-
-    // Load highlight images
-    photoAPI.getHighlights().then(setHighlights).catch(() => {});
-
-    // Load category visibility
-    photoAPI.getVisibility().then(setVisibility).catch(() => {});
-
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    // Single API call replaces: getHighlights() + getVisibility() + up to 4x getCategoryImages()
+    photoAPI.getHomepageData()
+      .then(data => {
+        if (data.highlights) {
+          const h = Object.fromEntries(Object.entries(data.highlights).filter(([, v]) => v));
+          setHighlights(prev => ({ ...prev, ...h }));
+        }
+        if (data.covers) {
+          const c = Object.fromEntries(Object.entries(data.covers).filter(([, v]) => v));
+          setCoverImages(prev => ({ ...prev, ...c }));
+        }
+        if (data.visibility) setVisibility(data.visibility);
+      })
+      .catch(() => {});
   }, []);
 
   const heroCover = highlights.hero || null;
@@ -583,31 +503,24 @@ const HomePage = ({ onViewGallery, onPortfolio, onAbout, onInfo, onReservation, 
   return (
     <>
       <GlobalHome />
-
-      {/* ── Nav ── */}
-      <Nav scrolled={scrolled}>
-        <NavGroup>
-          <NavLink onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Home</NavLink>
-          <NavLink onClick={onAbout}>About</NavLink>
-        </NavGroup>
-
-        <NavLogo onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>ShivaniJadonPhotography</NavLogo>
-
-        <NavRight>
-          <NavLink onClick={onInfo}>Info</NavLink>
-          <NavLink onClick={onPortfolio}>Portfolio</NavLink>
-          <NavLink onClick={onReservation}>Reservation</NavLink>
-        </NavRight>
-      </Nav>
+      <SharedNav active="home" nav={{ onHome, onPortfolio, onAbout, onInfo, onContact, onBooking }} />
 
       {/* ── Hero ── */}
       <Hero ref={heroRef}>
         <HeroFrame>
           {heroCover
-            ? <><img src={heroCover} alt="Hero" /><HeroOverlay><HeroText>Hi, so glad you are here</HeroText></HeroOverlay></>
+            ? <><img
+                src={heroCover}
+                srcSet={`${highlights['hero-mobile'] || heroCover} 1200w, ${heroCover} 2400w`}
+                sizes="(max-width: 768px) 94vw, min(88vw, 1200px)"
+                alt="Hero"
+                fetchpriority="high"
+                loading="eager"
+              /><HeroOverlay><HeroText>Hi, Soo glad you are here!</HeroText></HeroOverlay></>
             : <HeroPlaceholder>▣</HeroPlaceholder>
           }
         </HeroFrame>
+        <HeroBookBtn onClick={onBooking}>Book My Session</HeroBookBtn>
         <ScrollHint>
           <div className="line" />
           <span>Scroll</span>
@@ -625,7 +538,7 @@ const HomePage = ({ onViewGallery, onPortfolio, onAbout, onInfo, onReservation, 
               <CategoryItem key={cat.id} onClick={() => onViewGallery(cat.id)}>
                 <CatImageWrap className="cat-img">
                   {cover
-                    ? <img src={cover} alt={cat.label} />
+                    ? <img src={cover} alt={cat.label} loading="lazy" onError={(e) => { e.target.style.display = 'none'; }} />
                     : <div style={{ width:"100%", height:"100%", background:"#d8d0c8", display:"flex", alignItems:"center", justifyContent:"center", color:"#b8b0a4", fontSize:48 }}>▣</div>
                   }
                 </CatImageWrap>
@@ -651,7 +564,7 @@ const HomePage = ({ onViewGallery, onPortfolio, onAbout, onInfo, onReservation, 
         <FramedPhoto>
           <PhotoFrame>
             {highlights.about
-              ? <img src={highlights.about} alt="About Shivani" />
+              ? <img src={highlights.about} alt="About Shivani" loading="lazy" onError={(e) => { e.target.style.display = 'none'; }} />
               : <div className="ph">▣</div>
             }
           </PhotoFrame>
@@ -668,7 +581,7 @@ const HomePage = ({ onViewGallery, onPortfolio, onAbout, onInfo, onReservation, 
         <FramedPhoto>
           <PhotoFrame>
             {highlights.contact
-              ? <img src={highlights.contact} alt="Contact" />
+              ? <img src={highlights.contact} alt="Contact" loading="lazy" onError={(e) => { e.target.style.display = 'none'; }} />
               : <div className="ph">▣</div>
             }
           </PhotoFrame>
@@ -694,16 +607,18 @@ const HomePage = ({ onViewGallery, onPortfolio, onAbout, onInfo, onReservation, 
       <FooterDivider />
 
       {/* ── Instagram handle ── */}
-      <FooterIgSection>
-        <FooterIgIcon>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-            <circle cx="12" cy="12" r="4"/>
-            <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/>
-          </svg>
-        </FooterIgIcon>
-        <FooterIgHandle>@shivanijadonphotography</FooterIgHandle>
-      </FooterIgSection>
+      <a href="https://instagram.com/shivanijadonphotography" target="_blank" rel="noopener noreferrer" style={{textDecoration:'none',color:'inherit'}}>
+        <FooterIgSection>
+          <FooterIgIcon>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/>
+            </svg>
+          </FooterIgIcon>
+          <FooterIgHandle>@shivanijadonphotography</FooterIgHandle>
+        </FooterIgSection>
+      </a>
 
       {/* ── Bottom bar ── */}
       <FooterBottom>
@@ -713,7 +628,7 @@ const HomePage = ({ onViewGallery, onPortfolio, onAbout, onInfo, onReservation, 
             <FooterBottomLink onClick={onAbout}>About</FooterBottomLink>
             <FooterBottomLink onClick={onInfo}>Info</FooterBottomLink>
             <FooterBottomLink onClick={onPortfolio}>Portfolio</FooterBottomLink>
-            <FooterBottomLink onClick={onReservation}>Reservation</FooterBottomLink>
+            <FooterBottomLink onClick={onContact}>Get in Touch</FooterBottomLink>
           </FooterBottomNav>
           <FooterTopBtn onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} title="Back to top">↑</FooterTopBtn>
         </FooterBottomRow1>

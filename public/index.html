@@ -2,48 +2,98 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.svg" type="image/svg+xml"/>
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>Shivani Jadon Photography</title>
-    <!-- Preconnect to Google Fonts servers (non-render-blocking) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@200;300;400&family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@200;300;400&family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet"></noscript>
+    <!-- ── Favicons ───────────────────────────────────────────────── -->
+    <link rel="icon" type="image/x-icon" href="%PUBLIC_URL%/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
+
+    <!-- ── Viewport / theme ───────────────────────────────────────── -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f8eedf" />
+
+    <!-- ── SEO meta ───────────────────────────────────────────────── -->
+    <title>Shivani Jadon Photography | Connecticut Photographer</title>
+    <meta name="description" content="Shivani Jadon Photography — maternity, newborn, family portrait, and brand sessions in Connecticut. Serving Cromwell CT and surrounding areas." />
+    <meta name="keywords" content="maternity photographer CT, newborn photographer Connecticut, family portrait photographer Cromwell CT, Shivani Jadon Photography" />
+    <link rel="canonical" href="https://shivanijadonphotography.com/" />
+
+    <!-- ── Open Graph (Facebook / link previews) ─────────────────── -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://shivanijadonphotography.com/" />
+    <meta property="og:title" content="Shivani Jadon Photography | Connecticut Photographer" />
+    <meta property="og:description" content="Maternity, newborn, family portrait, and brand sessions in Connecticut." />
+    <meta property="og:image" content="https://shivanijadonphotography.com/gallery/highlights/hero.webp" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Shivani Jadon Photography" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- ── Twitter card ───────────────────────────────────────────── -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Shivani Jadon Photography | Connecticut Photographer" />
+    <meta name="twitter:description" content="Maternity, newborn, family portrait, and brand sessions in Connecticut." />
+    <meta name="twitter:image" content="https://shivanijadonphotography.com/gallery/highlights/hero.webp" />
+
+    <!-- ── PWA manifest ───────────────────────────────────────────── -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- ── Structured data — Local Business (Google search icon) ──── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "Shivani Jadon Photography",
+      "url": "https://shivanijadonphotography.com",
+      "logo": "https://shivanijadonphotography.com/logo512.png",
+      "image": "https://shivanijadonphotography.com/gallery/highlights/hero.webp",
+      "description": "Professional maternity, newborn, family portrait, and brand photography in Connecticut.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Cromwell",
+        "addressRegion": "CT",
+        "addressCountry": "US"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 41.5954,
+        "longitude": -72.6479
+      },
+      "areaServed": {
+        "@type": "GeoCircle",
+        "geoMidpoint": {
+          "@type": "GeoCoordinates",
+          "latitude": 41.5954,
+          "longitude": -72.6479
+        },
+        "geoRadius": "88000"
+      },
+      "sameAs": []
+    }
+    </script>
+
+    <!-- ── Performance ────────────────────────────────────────────── -->
+    <link rel="preconnect" href="https://shivanijadonphotography.com">
+    <!-- Mobile preloads the 1200px variant; desktop preloads the 2400px variant -->
+    <link rel="preload" as="image" href="https://shivanijadonphotography.com/gallery/highlights/hero-mobile.webp" type="image/webp" fetchpriority="high" media="(max-width: 768px)">
+    <link rel="preload" as="image" href="https://shivanijadonphotography.com/gallery/highlights/hero.webp" type="image/webp" fetchpriority="high" media="(min-width: 769px)">
+
+    <!-- ── Analytics ──────────────────────────────────────────────── -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9EL9NGKFL7"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-9EL9NGKFL7');
+    </script>
+
+    <!-- ── CloudWatch RUM ─────────────────────────────────────────── -->
+    <script>
+      (function(n,i,v,r,s,c,x,z){x=window.AwsRumClient={q:[],n:n,i:i,v:v,r:r,c:c};window[n]=function(){x.q.push(arguments)};z=document.createElement('script');z.async=true;z.src=s;document.head.insertBefore(z,document.head.getElementsByTagName('script')[0])})('cwr','33ca046e-7572-4a88-ad3c-25fbb64969bb','1.0.0','us-east-1','https://client.rum.us-east-1.amazonaws.com/1.13.0/cwr.js',{sessionSampleRate:1,identityPoolId:'us-east-1:664efa09-9c40-42cc-bd0a-0f71e92055b4',endpoint:'https://dataplane.rum.us-east-1.amazonaws.com',telemetries:['performance','errors','http'],allowCookies:true});
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
   </body>
 </html>

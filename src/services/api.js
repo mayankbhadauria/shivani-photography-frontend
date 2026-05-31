@@ -39,6 +39,12 @@ class PhotoAPI {
     return response.data;
   }
 
+  // ── Homepage data — single call replacing highlights + visibility + covers ──
+  async getHomepageData() {
+    const response = await this.client.get("/api/homepage-data");
+    return response.data;
+  }
+
   // ── Highlights (hero / about / contact images) ──────────────────────
   async getHighlights() {
     const response = await this.client.get("/api/highlights");
@@ -50,6 +56,18 @@ class PhotoAPI {
     const { data } = await this.client.get(`/api/highlights/${slot}/presigned`);
     // Upload directly to S3
     await axios.put(data.url, file, { headers: { "Content-Type": "image/jpeg" } });
+    // Resize + set cache headers server-side
+    await this.client.post(`/api/highlights/${slot}/process`);
+    return data;
+  }
+
+  async processAllHighlights() {
+    const { data } = await this.client.post('/api/highlights/process-all');
+    return data;
+  }
+
+  async sendContact({ name, email, phone, message }) {
+    const { data } = await this.client.post('/api/contact', { name, email, phone, message });
     return data;
   }
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import SharedNav from "./SharedNav";
+import GetInTouch from "./GetInTouch";
 import { photoAPI } from "../services/api";
 
 const T = {
@@ -12,19 +13,19 @@ const GlobalPortfolio = createGlobalStyle`body { background: ${T.white}; margin:
 const Page = styled.div`min-height: 100vh; background: ${T.white};`;
 
 const Header = styled.section`
-  padding: 140px 10% 64px;
-  @media (max-width: 768px) { padding: 120px 28px 48px; }
+  padding: 110px 10% 64px;
+  @media (max-width: 768px) { padding: 100px 28px 48px; }
 `;
 
 const Label = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 9px; font-weight: 300;
   letter-spacing: 0.42em; text-transform: uppercase;
   color: ${T.light}; margin-bottom: 20px;
 `;
 
 const PageTitle = styled.h1`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: clamp(2rem, 5vw, 4rem);
   font-weight: 200; letter-spacing: 0.18em;
   text-transform: uppercase; color: ${T.black};
@@ -41,7 +42,7 @@ const Grid = styled.div`
 
 const Tile = styled.div`
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   cursor: pointer;
   background: #1a1a1a;
@@ -49,6 +50,7 @@ const Tile = styled.div`
   img {
     width: 100%; height: 100%;
     object-fit: cover;
+    object-position: center top;
     display: block;
     transition: transform 0.7s ease, opacity 0.4s;
     opacity: 0.72;
@@ -72,7 +74,7 @@ const TileOverlay = styled.div`
 `;
 
 const TileLabel = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 9px; font-weight: 300;
   letter-spacing: 0.42em; text-transform: uppercase;
   color: rgba(255,255,255,0.6);
@@ -80,7 +82,7 @@ const TileLabel = styled.div`
 `;
 
 const TileName = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: clamp(1.4rem, 2.6vw, 2.2rem);
   font-weight: 200; letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -98,59 +100,43 @@ const FooterBar = styled.footer`
   border-top: 1px solid ${T.border};
   padding: 20px 48px;
   display: flex; justify-content: space-between; align-items: center;
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 9px; font-weight: 300;
   letter-spacing: 0.12em; color: ${T.light};
   @media (max-width: 768px) { padding: 16px 24px; }
 `;
 
 const PORTFOLIO_CATS = [
-  { id: "maternity",         apiId: "maternity",  label: "Maternity",        num: "01" },
-  { id: "newborn",           apiId: "newborn",    label: "Newborn",           num: "02" },
-  { id: "family-portraits",  apiId: "family-portraits", label: "Family Portraits", num: "03" },
-  { id: "brands-and-events", apiId: null,         label: "Brands & Events",  num: "04" },
+  { id: "family-portraits",  apiId: "family-portraits", label: "Family Portraits", num: "01" },
+  { id: "maternity",         apiId: "maternity",        label: "Maternity",        num: "02" },
+  { id: "newborn",           apiId: "newborn",          label: "Newborn",          num: "03" },
+  { id: "brands-and-events", apiId: null,               label: "Brands & Events",  num: "04" },
 ];
+
+const CF_H = 'https://shivanijadonphotography.com/gallery/highlights';
+const INITIAL_COVERS = {
+  'family-portraits':  `${CF_H}/cover-family-portraits.webp`,
+  'maternity':         `${CF_H}/cover-maternity.webp`,
+  'newborn':           `${CF_H}/cover-newborn.webp`,
+  'brands-and-events': `${CF_H}/cover-brands-and-events.webp`,
+};
 
 const PortfolioPage = (props) => {
   const { onViewGallery } = props;
-  const [covers,     setCovers]     = useState({});
+  const [covers,     setCovers]     = useState(INITIAL_COVERS);
   const [visibility, setVisibility] = useState(null);
 
   useEffect(() => {
-    photoAPI.getVisibility()
-      .then(v => setVisibility(v))
+    // Single API call replaces: getVisibility() + getHighlights() + up to 4x getCategoryImages()
+    photoAPI.getHomepageData()
+      .then(data => {
+        if (data.visibility) setVisibility(data.visibility);
+        if (data.covers) {
+          const c = Object.fromEntries(Object.entries(data.covers).filter(([, v]) => v));
+          setCovers(prev => ({ ...prev, ...c }));
+        }
+      })
       .catch(() => setVisibility({}));
-  }, []);
-
-  useEffect(() => {
-    const fetchCovers = async () => {
-      const results = {};
-
-      // 1. Try highlight covers first (admin-selected)
-      try {
-        const highlights = await photoAPI.getHighlights();
-        PORTFOLIO_CATS.forEach(cat => {
-          const slot = `cover-${cat.id}`;
-          if (highlights[slot]) results[cat.id] = highlights[slot];
-        });
-      } catch { /* ignore */ }
-
-      // 2. Fall back to first uploaded photo for any tile without a cover
-      const needsFallback = PORTFOLIO_CATS.filter(c => !results[c.id]);
-      await Promise.allSettled(
-        needsFallback.map(async (cat) => {
-          const apiId = cat.apiId || "brands";
-          try {
-            const res = await photoAPI.getCategoryImages(apiId, 0);
-            const imgs = res.images || [];
-            if (imgs[0]) results[cat.id] = imgs[0].display || imgs[0].thumbnail;
-          } catch { /* no cover */ }
-        })
-      );
-
-      setCovers(results);
-    };
-    fetchCovers();
   }, []);
 
   return (
@@ -167,7 +153,7 @@ const PortfolioPage = (props) => {
         {PORTFOLIO_CATS.filter(cat => visibility === null || visibility[cat.id] !== false).map((cat) => (
           <Tile key={cat.id} onClick={() => onViewGallery(cat.id)}>
             {covers[cat.id]
-              ? <img src={covers[cat.id]} alt={cat.label} />
+              ? <img src={covers[cat.id]} alt={cat.label} onError={(e) => { e.target.style.display = 'none'; }} />
               : <TilePlaceholder />
             }
             <TileOverlay>
@@ -178,9 +164,11 @@ const PortfolioPage = (props) => {
         ))}
       </Grid>
 
+      <GetInTouch onContact={props.onContact} />
+
       <FooterBar>
         <span>© {new Date().getFullYear()} shivanijadonphotography</span>
-        <span>@shivanijadonphotography</span>
+        <a href="https://instagram.com/shivanijadonphotography" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'none',borderBottom:'1px solid currentColor'}}>@shivanijadonphotography</a>
       </FooterBar>
     </Page>
   );

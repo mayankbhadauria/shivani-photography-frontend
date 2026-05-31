@@ -47,7 +47,7 @@ const FormPanel = styled.div`
 `;
 
 const Logo = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 13px;
   font-weight: 300;
   letter-spacing: 0.28em;
@@ -58,7 +58,7 @@ const Logo = styled.div`
 `;
 
 const Tagline = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 9px;
   letter-spacing: 0.4em;
   text-transform: uppercase;
@@ -80,7 +80,7 @@ const Field = styled.div`
 
   label {
     display: block;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, sans-serif;
     font-size: 9px;
     letter-spacing: 0.3em;
     text-transform: uppercase;
@@ -93,7 +93,7 @@ const Field = styled.div`
     background: none;
     border: none;
     outline: none;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, sans-serif;
     font-size: 14px;
     font-weight: 300;
     color: #111;
@@ -107,7 +107,7 @@ const SubmitBtn = styled.button`
   background: #111;
   border: none;
   color: #fff;
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 10px;
   font-weight: 300;
   letter-spacing: 0.3em;
@@ -121,7 +121,7 @@ const SubmitBtn = styled.button`
 `;
 
 const ErrorMsg = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 11px;
   color: #c0392b;
   text-align: center;
@@ -156,7 +156,7 @@ const LoginPage = ({ onLogin }) => {
   const [error,           setError]           = useState("");
   const [loading,         setLoading]         = useState(false);
   const [pendingUser,     setPendingUser]     = useState(null);
-  const [loginBg,         setLoginBg]         = useState(null);
+  const [loginBg, setLoginBg] = useState('https://shivanijadonphotography.com/gallery/highlights/login.webp');
 
   useEffect(() => {
     fetch(`${API_BASE}/api/login-bg`)
@@ -203,7 +203,7 @@ const LoginPage = ({ onLogin }) => {
     return (
       <Page>
         <PhotoPanel>
-        {loginBg ? <img src={loginBg} alt="" /> : <div className="ph">▣</div>}
+        {loginBg ? <img src={loginBg} alt="" onError={(e) => { e.target.style.display = 'none'; }} /> : <div className="ph">▣</div>}
       </PhotoPanel>
         <FormPanel>
           <Logo>Shivani Jadon Photography</Logo>
@@ -226,7 +226,7 @@ const LoginPage = ({ onLogin }) => {
   return (
     <Page>
       <PhotoPanel>
-        {loginBg ? <img src={loginBg} alt="" /> : <div className="ph">▣</div>}
+        {loginBg ? <img src={loginBg} alt="" onError={(e) => { e.target.style.display = 'none'; }} /> : <div className="ph">▣</div>}
       </PhotoPanel>
       <FormPanel>
         <Logo>Shivani Jadon Photography</Logo>

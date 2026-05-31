@@ -38,7 +38,7 @@ const HeroOverlay = styled.div`
 `;
 
 const HeroTitle = styled.h1`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-weight: 200;
   font-size: clamp(2.4rem, 6vw, 5.5rem);
   letter-spacing: 0.22em;
@@ -51,7 +51,7 @@ const HeroTitle = styled.h1`
 
 /* ── Packages label ──────────────────────────────────────────────── */
 const PackagesLabel = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 10px; font-weight: 300;
   letter-spacing: 0.46em; text-transform: uppercase;
   color: ${T.mid};
@@ -107,7 +107,7 @@ const TextCol = styled.div`
 `;
 
 const SessionName = styled.h2`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: clamp(2rem, 3.8vw, 3.6rem);
   font-weight: 200;
   letter-spacing: 0.2em;
@@ -118,7 +118,7 @@ const SessionName = styled.h2`
 `;
 
 const BookLink = styled.button`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 10px; font-weight: 300;
   letter-spacing: 0.34em; text-transform: uppercase;
   color: ${T.black};
@@ -131,20 +131,20 @@ const BookLink = styled.button`
 `;
 
 const IdealLabel = styled.p`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 13px; font-weight: 300;
   color: ${T.black}; margin: 0 0 10px;
 `;
 
 const IdealItem = styled.p`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 13px; font-weight: 300;
   color: ${T.mid}; margin: 0 0 6px;
   line-height: 1.9;
 `;
 
 const Deliverable = styled.p`
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 13px; font-weight: 300;
   color: ${T.mid}; margin: 12px 0 0;
   font-style: italic;
@@ -156,7 +156,7 @@ const ImgPlaceholder = styled.div`
   min-height: 420px;
   background: #f0ece7;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 10px; font-weight: 300;
   letter-spacing: 0.28em; text-transform: uppercase;
   color: ${T.light};
@@ -167,15 +167,21 @@ const FooterBar = styled.footer`
   border-top: 1px solid #e8e3dc;
   padding: 20px 48px;
   display: flex; justify-content: space-between; align-items: center;
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 9px; font-weight: 300;
   letter-spacing: 0.12em; color: ${T.light};
   @media (max-width: 768px) { padding: 16px 24px; }
 `;
 
+const CF_H = 'https://shivanijadonphotography.com/gallery/highlights';
+
 const ReservationPage = (props) => {
   const { onContact } = props;
-  const [images, setImages] = useState({});
+  const [images, setImages] = useState({
+    'reservation-hero':  `${CF_H}/reservation-hero.webp`,
+    'portrait-session':  `${CF_H}/portrait-session.webp`,
+    'standard-session':  `${CF_H}/standard-session.webp`,
+  });
 
   useEffect(() => {
     photoAPI.getHighlights().then(h => setImages(h)).catch(() => {});
@@ -189,7 +195,7 @@ const ReservationPage = (props) => {
       {/* Hero Banner */}
       <Hero>
         {images["reservation-hero"]
-          ? <HeroImg src={images["reservation-hero"]} alt="Session Reservation" />
+          ? <HeroImg src={images["reservation-hero"]} alt="Session Reservation" onError={(e) => { e.target.style.display = 'none'; }} />
           : null
         }
         <HeroOverlay>
@@ -203,7 +209,7 @@ const ReservationPage = (props) => {
       <SessionRow>
         <ImageCol>
           {images["portrait-session"]
-            ? <SessionImg src={images["portrait-session"]} alt="Portrait Session" />
+            ? <SessionImg src={images["portrait-session"]} alt="Portrait Session" onError={(e) => { e.target.style.display = 'none'; }} />
             : <ImgPlaceholder>Portrait Session</ImgPlaceholder>
           }
           <ImgRule />
@@ -231,7 +237,7 @@ const ReservationPage = (props) => {
         </TextCol>
         <ImageCol $reverse>
           {images["standard-session"]
-            ? <SessionImg src={images["standard-session"]} alt="Standard Session" />
+            ? <SessionImg src={images["standard-session"]} alt="Standard Session" onError={(e) => { e.target.style.display = 'none'; }} />
             : <ImgPlaceholder>Standard Session</ImgPlaceholder>
           }
           <ImgRule />
@@ -242,7 +248,7 @@ const ReservationPage = (props) => {
 
       <FooterBar>
         <span>© {new Date().getFullYear()} shivanijadonphotography</span>
-        <span>@shivanijadonphotography</span>
+        <a href="https://instagram.com/shivanijadonphotography" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'none',borderBottom:'1px solid currentColor'}}>@shivanijadonphotography</a>
       </FooterBar>
     </Page>
   );
